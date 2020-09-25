@@ -1,0 +1,92 @@
+---
+title: "section2_IVA"
+author: "Eline van Groningen, Paola Priante, Valery Maasdamme, Yuhu Wang"
+date: "9/25/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+                      comment = "", fig.height=2, fig.width=4, fig.align = "center")
+```
+
+# Instrumental Variable Analysis: Effect of Compulsory Schooling on Wages
+
+Downloading the libraries 
+
+```{r}
+library(tidyverse)
+library(stargazer)
+library(dagitty)
+library(gridExtra)
+library(tinytex)
+```
+
+Example of code for plots 
+
+```{r, fig.width=8}
+g1.1 <- ggplot(data = hp, aes(LotArea, SalePrice)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  geom_smooth(color = "red", alpha = 0.2) + 
+  theme_bw() +
+  labs(caption = "Figure 1.1") +
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold"))
+
+g1.2 <- ggplot(data = hp, aes(Age, SalePrice)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  geom_smooth(color = "red", alpha = 0.2) + 
+  theme_bw() +
+  labs(caption = "Figure 1.2") +
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold"))
+
+grid.arrange(g1.1, g1.2, g1.3, nrow = 1)
+```
+
+## 1 
+
+```{r}
+
+
+```
+
+## 2
+
+```{r}
+
+
+```
+
+
+## 3
+
+```{r}
+
+
+```
+
+
+## 4
+
+```{r}
+
+
+```
+
+
+## 5 
+
+```{r}
+
+
+```
+
+
+## 6
+
+```{r}
+
+
+```
+

@@ -1,0 +1,31 @@
+---
+title: "section1_DiD"
+author: "Eline van Groningen, Paola Priante, Valery Maasdamme, Yuhu Wang"
+date: "9/25/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+                      comment = "", fig.height=2, fig.width=4, fig.align = "center")
+```
+
+# Difference-in-Difference Analysis: Female Labor Participation 
+
+## 1 
+
+Downloading the libraries 
+
+```{r}
+library(tidyverse)
+library(stargazer)
+library(dagitty)
+library(gridExtra)
+library(tinytex)
+```
+
+```{r cars}
+summary(cars)
+```
+
+

@@ -1,0 +1,63 @@
+---
+title: "section3_PDM"
+author: "Eline van Groningen, Paola Priante, Valery Maasdamme, Yuhu Wang"
+date: "9/25/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+                      comment = "", fig.height=2, fig.width=4, fig.align = "center")
+```
+
+# Panel Data Modeling: time to export 
+
+Downloading the libraries 
+
+```{r}
+library(tidyverse)
+library(stargazer)
+library(dagitty)
+library(gridExtra)
+library(tinytex)
+```
+
+## 1 
+
+```{r}
+
+
+```
+
+## 2
+
+```{r}
+
+
+```
+
+
+## 3
+
+```{r}
+
+
+```
+
+
+## 4
+
+```{r}
+
+
+```
+
+
+## 5 
+
+```{r}
+
+
+```
+
+
