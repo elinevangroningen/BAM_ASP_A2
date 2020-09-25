@@ -1,0 +1,8 @@
+ls			>> lists all files in the current folder
+cd 			>> navigate to next folder or file, when you just type cd then you go back to the directory in which you started 
+git status 		>> check the current status of the repository
+git add . 		>> add all the files to be pushed
+git commit -m "TEXT" 	>> commit your changes and add a comment about changes (remove TEXT and type between the "")
+git push 		>> push you changes, so they are available for everyone
+git pull 		>> pull the changes others made, alwayse pull the newest version before making changes!
+
