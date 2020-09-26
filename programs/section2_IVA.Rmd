@@ -20,6 +20,8 @@ library(stargazer)
 library(dagitty)
 library(gridExtra)
 library(tinytex)
+library(stargazer)
+library(AER)
 ```
 
 Example of code for plots 
@@ -43,50 +45,50 @@ g1.2 <- ggplot(data = hp, aes(Age, SalePrice)) +
 
 grid.arrange(g1.1, g1.2, g1.3, nrow = 1)
 ```
-
+Import the data
+```{r}
+setwd("C:/Users/Administrator/Desktop/NewStart/Courses/AdvancedStatisticsandProgramming/assignment2/github/BAM_ASP_A2/data")
+da.IV <- read.csv("IV_dataset.csv",header = TRUE)
+da.IV <- subset(da.IV,select = c("age","educ","lnwage","married","qob","SMSA","yob"))
+## Subset the dataset so that we could focus on the variables above according to the order
+```
 ## 1 
+Two examples that could bias the effect:
+
+Example One: The Education level of parents could bias the estimated education effect. It is because parents with high education level will be more likely to urge their children to have and finish the education. However, on the other hand, children with parents who have higher education level will be more likely to get higher salary when they go to work, since they can get better education environment from their family. Therefore, the education level of parents could bias the education effect.
+
+Example Two: The living area could also be a factor that biases the education effect on wages. It is because people from rich area will have more opportunities to get more years of education. However, these people will also be more likely to get higher wages when they go to work because they could bulid better network in this area, which causes the bias estimation of the education effect on wages.
+
+##2
+Present summary statistics of the data
 
 ```{r}
-
-
+stargazer(da.IV,type = "text")
+summary(as.factor(da.IV$married))
 ```
+From the statistics description above we could see, there are 329509 observations in the dataset, and the average age, education years, lnwage for all observations are 44.65, 12.77 and 5.9 respectively.
 
-## 2
-
+##3
+Test if the quarter of birth(qob) meets the relevance criterion.
 ```{r}
+da.IV$married <- as.factor(da.IV$married)
+da.IV$qob <- as.factor(da.IV$qob)
+da.IV$SMSA <- as.factor(da.IV$SMSA)
+da.IV$yob <- as.factor(da.IV$yob)
+#To change those variables which should be factor variables into factor vaiables.
 
+g1.1 <- ggplot(data = da.IV, aes(qob, educ)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  theme_bw() +
+  labs(caption = "Figure 2.1") +
+  geom_boxplot() + 
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold")) + 
+  labs(x = "Quarter of Birth", y = "Education(in years)")
+g1.1
 
+rsltIV <- ivreg(lnwage ~ educ|qob,data = da.IV)
+summary(rsltIV, diagnostics = TRUE)
 ```
-
-
-## 3
-
-```{r}
-
-
-```
-
-
-## 4
-
-```{r}
-
-
-```
-
-
-## 5 
-
-```{r}
-
-
-```
-
-
-## 6
-
-```{r}
-
-
-```
+According to the boxplot, we can hardly see there is a strong correlation between the instrumental variable(qob) and the causal variable(educ). Therefore, we need to run a weak instruments test, which gets us a p-value < 2e-16. In terms of this p-value, we can resject the Null hypothesis, which indicates there should be a strong relevance between qob and educ.
 
