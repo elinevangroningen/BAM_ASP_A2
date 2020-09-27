@@ -6,3 +6,4 @@ git commit -m "TEXT" 	>> commit your changes and add a comment about changes (re
 git push 		>> push you changes, so they are available for everyone
 git pull 		>> pull the changes others made, alwayse pull the newest version before making changes!
 
+ls

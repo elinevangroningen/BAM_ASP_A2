@@ -48,7 +48,7 @@ grid.arrange(g1.1, g1.2, g1.3, nrow = 1)
 Import the data
 ```{r}
 setwd("C:/Users/Administrator/Desktop/NewStart/Courses/AdvancedStatisticsandProgramming/assignment2/github/BAM_ASP_A2/data")
-da.IV <- read.csv("IV_dataset.csv",header = TRUE)
+da.IV <- read.csv("IV_dataset.csv", header = TRUE)
 da.IV <- subset(da.IV,select = c("age","educ","lnwage","married","qob","SMSA","yob"))
 ## Subset the dataset so that we could focus on the variables above according to the order
 ```
@@ -90,5 +90,39 @@ g1.1
 rsltIV <- ivreg(lnwage ~ educ|qob,data = da.IV)
 summary(rsltIV, diagnostics = TRUE)
 ```
-According to the boxplot, we can hardly see there is a strong correlation between the instrumental variable(qob) and the causal variable(educ). Therefore, we need to run a weak instruments test, which gets us a p-value < 2e-16. In terms of this p-value, we can resject the Null hypothesis, which indicates there should be a strong relevance between qob and educ.
+According to the boxplot, we can hardly see there is a strong correlation between the instrumental variable(qob) and the causal variable(educ). Therefore, we need to run a weak instruments test, which gets us a p-value < 2e-16. In terms of this p-value, we can reject the Null hypothesis, which indicates there should be a strong relevance between qob and educ.
 
+```{r}
+dir <- "C:/Users/ppria/Documents/BAM_ASP_A2/data/"
+da.IV <- read.csv(file=paste0(dir, "IV_dataset.csv"), header=TRUE)
+da.IV <- subset(da.IV,select = c("age","educ","lnwage","married","qob","SMSA","yob"))
+
+```
+##4
+IV regression analysis of the effect of education (in years) on log wages using quarter of birth as instrument variable: The quarter of birth partially influences the years of education. We use the variation that qob has on education to estimate the effect of education on weekly earnings. 
+Tables presented below show that an extra year of education for people in the United States born between 1930-1939, leads to a 0.103% increase in weekly earnings. With a p-vale < 0.05, the estimated coefficient is statistically significant. 
+
+```{r}
+library(ivpack)
+rslt2SLS.A <- ivreg(lnwage ~ educ | qob , data=da.IV)
+summary(rslt2SLS.A)
+stargazer(rslt2SLS.A, type= "text")
+```
+When adding marriage status and the indicator of living situation as control variables, there is a  decrease on the estimated coefficient from 0.103% to 0.1% with slightly lower standard errors still significant at 5% significance level. 
+```{r}
+rslt2SLS.A <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob , data=da.IV)
+summary(rslt2SLS.A)
+stargazer(rslt2SLS.A, type= "text")
+```
+Moreover, the use of robust standard errors does no have a critical effect on the statistical inference of the estimated coefficient of "Education" nor the control variables "Married and SMSA".
+```{r}
+#Robust standard errors
+modelIV <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob , data=da.IV)
+summary(modelIV)
+#Standard  errors (superfluous  in the  case of  seBasic)
+seBasic  <- sqrt(diag(vcov(modelIV)))
+seWhite  <- sqrt(diag(vcovHC(modelIV , type="HC0")))
+# Make  table  with  stargazer
+stargazer(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite), type= "text")
+summary(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite))
+```
