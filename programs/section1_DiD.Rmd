@@ -12,9 +12,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE,
 
 # Difference-in-Difference Analysis: Female Labor Participation 
 
-## 1 
-
-Downloading the libraries 
+Downloading the libraries, setting the working directory and importing the data set 
 
 ```{r}
 library(tidyverse)
@@ -22,10 +20,144 @@ library(stargazer)
 library(dagitty)
 library(gridExtra)
 library(tinytex)
+library(ggplot2)
+
+dir <- "/Users/valeriemaasdamme/Documents/BAM_ASP_A2" 
+dirProg <- paste0(dir, "/programs/") 
+dirData <- paste0(dir, "/Data/")
+
+dfDiD <- read.csv(file=paste0(dirData, "DiD_dataset.csv"))
 ```
 
-```{r cars}
-summary(cars)
+## Preparing and analyzing the dataset 
+No need to transform the dataset, as it is already in the long-format, with observations different rows for different time periods for each state. All variables seem to be numeric or integer. No need to transform character to factor. 
+
+We have data from 1991 to 1996. In 1993, the EITC was implemented. A dummy variable *dPeriod* is created to indicate the time before and after the EITC policy. The years 1991 and 1992 take a value of 0, and 1993 and the years after take a value of 1.
+
+The EITC policy only applies to women with children. Therefore, we need to compare two groups of women (with and without any children). A dummy variable *dChildren* is created to indicate the group of women with and without any children. Women with no children take a value of 0 (non-treated group), whereas women with 1 or more children take a value of 1 (treated group).
+
+Furthermore, the EITC only applies to low-income workers. Therefore, women in both the treated and the non-treated group should be employed (*work* = 1). We create a subset of women that are employed.
+
+```{r}
+dfDiD$dPeriod = ifelse(dfDiD$year >= 1993, 1, 0) 
+dfDiD$cChildren = ifelse(dfDiD$children >= 1, 1, 0)
+
+dfDiD.sub <- subset(dfDiD, work=="1")
+```
+
+## 1 Plotting the dependent variables 
+We have 3 dependent variables: annual earnings (earn), annual family income (finc) and working/non-working (work)
+
+```{r}
+
+```
+
+Plotting the averages of the three dependent variables per group to present visual evidence of the DiD effect. 
+
+```{r}
+ggplot(YR, LFPR, data=minfo, geom=c("point","line"), colour=Group,
+        xlab="Year", ylab="Annual Earnings")
+
+
+```
+
+## 2 Summary statistics of the dataset 
+Present a description of the data. 
+
+```{r}
+
+
+```
+
+## 3 Difference-in-Difference 
+Present the difference-in-difference effects in a matrix for each dependent variable. 
+First, the averages of the these dependent variables per group per period are computed. 
+
+```{r}
+#Take averages
+avgEarn <- ddply (dfDiD.sub, .(dPeriod, cChildren), summarise, 
+                 avgEarn = mean(earn, na.rm=TRUE))
+
+avgFinc <- ddply (dfDiD.sub, .(dPeriod, cChildren), summarise, 
+                 avgFinc = mean(finc, na.rm=TRUE))
+
+avgWork <- ddply (dfDiD, .(dPeriod, cChildren), summarise, 
+                 avgWork = mean(work, na.rm=TRUE))
+
+#Remodel the avg table from long to wide, add an additional row for the difference in averages and rename the rows
+avgtable.Earn <- dcast (avgEarn, dPeriod ~ cChildren, value.var = "avgEarn")
+avgtable.Earn <- rbind(avgtable.Earn, avgtable.Earn[2,]-avgtable.Earn[1,]) 
+rownames(avgtable.Earn) <- c("Before", "After", "Difference")
+colnames(avgtable.Earn) <- c("dPeriod", "Women without children (0)", "Women with children (1)")
+avgtable.Earn[3, "dPeriod"] <- NA
+
+avgtable.Finc <- dcast (avgFinc, dPeriod ~ cChildren, value.var = "avgFinc")
+avgtable.Finc <- rbind(avgtable.Finc, avgtable.Finc[2,]-avgtable.Finc[1,]) 
+rownames(avgtable.Finc) <- c("Before", "After", "Difference")
+colnames(avgtable.Finc) <- c("dPeriod", "Women without children (0)", "Women with children (1)")
+avgtable.Finc[3, "dPeriod"] <- NA
+
+avgtable.Work <- dcast (avgWork, dPeriod ~ cChildren, value.var = "avgWork")
+avgtable.Work <- rbind(avgtable.Work, avgtable.Work[2,]-avgtable.Work[1,]) 
+rownames(avgtable.Work) <- c("Before", "After", "Difference")
+colnames(avgtable.Work) <- c("dPeriod", "Women without children (0)", "Women with children (1)")
+avgtable.Work[3, "dPeriod"] <- NA
+
+stargazer(avgtable.Earn, summary=FALSE, align = TRUE, type="text", title = "Average Annual Earnings")
+stargazer(avgtable.Finc, summary=FALSE, align = TRUE, type="text", title = "Average Indicator Annual Family Income")
+stargazer(avgtable.Work, summary=FALSE, align = TRUE, type="text", title = "Average Indicator Work Status")
+```
+
+As can be seen in the tables above, the average annual earnings of employed women without children decreases with 1,076.42 US Dollars after the implementation of the EITC. However, the average annual earnings of woman with children increases with 451,54 US Dollars after the implementation of the EITC. 
+
+Similarly, the average annual family income of employed women without children decreases with 1,348.46 US Dollars after the implementation of the EITC, whereas the average family income of women with children increases with 455.36 US Dollars after the implementation of the EITC. 
+
+(The average rate of employment??? for women without any children decreases with 0.0005 ?? after the EITC was implemented. On the other hand, the average rate of employment for women with children increases with 0.026 after the implementation of the EITC. 
+
+---> WHAT IS THEN THE DIFFERENCE-IN-DIFFERENCE EFFECT?
+
+## 4 Regression analysis 
+Conduct regression analyses of the DiD effect for the 3 dependent vairbales. Explain and interpret the findings. What is the effect of the policy introduction on the dependent variables? 
+
+The difference-in-difference models that are estimated are the following:
+
+$$Earn = \beta_0 + \beta_1 cChildren + \beta_2 dPeriod + \beta_3 cChildren dPeriod + \varepsilon_i$$
+$$Finc = \beta_0 + \beta_1 cChildren + \beta_2 dPeriod + \beta_3 cChildren dPeriod + \varepsilon_i$$
+$$Work = \beta_0 + \beta_1 cChildren + \beta_2 dPeriod + \beta_3 cChildren dPeriod + \varepsilon_i$$
+
+```{r}
+
+mdlEarn <- earn ~ cChildren + dPeriod + cChildren:dPeriod
+rsltOLSEarn <- lm(mdlEarn, data=dfDiD.sub)
+
+mdlFinc <- finc ~ cChildren + dPeriod + cChildren:dPeriod
+rsltOLSFinc <- lm(mdlFinc, data=dfDiD.sub)
+
+mdlWork <- work ~ cChildren + dPeriod + cChildren:dPeriod
+rsltOLSWork <- lm(mdlWork, data=dfDiD)
+
+stargazer(rsltOLSEarn, rsltOLSFinc, rsltOLSWork,
+          intercept.bottom = FALSE, align = TRUE, no.space=TRUE, type="text")
+
+```
+
+How does this effect change when adding control variables?
+A possible explanation for the results is that X specific characteristics are not taken into account when comparing averages. Therefore we add control variables. Possible control variables: the State Unemployment Rate, Unearned Income and the Number of Children.
+
+```{r}
+# EXAMPLE 
+mdlB <- employ ~ dState + dPeriod + dState:dPeriod + prix  #prix as controlvariables
+mdlC <- employ ~ dState + dPeriod + dState:dPeriod + prix + as.factor(SHEET) #restaurant specific factors as controlvariable
+
+
+```
+
+Does robust standard errors seem necessary?
+
+```{r}
+
+
+
 ```
 
 
