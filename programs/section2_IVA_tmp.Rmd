@@ -1,0 +1,226 @@
+---
+title: "section2_IVA"
+author: "Eline van Groningen, Paola Priante, Valery Maasdamme, Yuhu Wang"
+date: "9/25/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+                      comment = "", fig.height=2, fig.width=4, fig.align = "center")
+```
+
+# Instrumental Variable Analysis: Effect of Compulsory Schooling on Wages
+
+Downloading the libraries 
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(stargazer)
+library(dagitty)
+library(gridExtra)
+library(tinytex)
+library(stargazer)
+library(AER)
+library(ivpack)
+```
+
+Example of code for plots 
+
+```{r, fig.width=8}
+g1.1 <- ggplot(data = hp, aes(LotArea, SalePrice)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  geom_smooth(color = "red", alpha = 0.2) + 
+  theme_bw() +
+  labs(caption = "Figure 1.1") +
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold"))
+
+g1.2 <- ggplot(data = hp, aes(Age, SalePrice)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  geom_smooth(color = "red", alpha = 0.2) + 
+  theme_bw() +
+  labs(caption = "Figure 1.2") +
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold"))
+
+grid.arrange(g1.1, g1.2, g1.3, nrow = 1)
+```
+Import the data
+```{r}
+# Set working director
+setwd("C:/Users/Administrator/Desktop/NewStart/Courses/AdvancedStatisticsandProgramming/assignment2/github/BAM_ASP_A2/data")
+<<<<<<< HEAD
+
+# Load csv and generate subset containing only variables for interest
+da.IV <- read.csv("IV_dataset.csv", header = TRUE)
+da.IV <- subset(da.IV, select = c("age", "educ", "lnwage", "married", "qob", 
+                                  "SMSA", "yob"))
+
+## Subset the data set so that we could focus on the variables above according to the order
+=======
+da.IV <- read.csv("IV_dataset.csv", header = TRUE)
+da.IV <- subset(da.IV,select = c("age","educ","lnwage","married","qob","SMSA","yob"))
+## Subset the dataset so that we could focus on the variables above according to the order
+>>>>>>> e30e1e3083fb6ffed70f64d611a6e5002cac5a10
+```
+## 1 
+Two examples that could bias the effect:
+
+Example One: The Education level of parents could bias the estimated education effect. It is because parents with high education level will be more likely to urge their children to have and finish the education. However, on the other hand, children with parents who have higher education level will be more likely to get higher salary when they go to work, since they can get better education environment from their family. Therefore, the education level of parents could bias the education effect.
+
+Example Two: The living area could also be a factor that biases the education effect on wages. It is because people from rich area will have more opportunities to get more years of education. However, these people will also be more likely to get higher wages when they go to work because they could build better network in this area, which causes the bias estimation of the education effect on wages.
+
+##2
+Present summary statistics of the data
+
+```{r}
+stargazer(da.IV,type = "text")
+summary(as.factor(da.IV$married))
+```
+From the statistics description above we could see, there are 329509 observations in the dataset, and the average age, education years, lnwage for all observations are 44.65, 12.77 and 5.9 respectively.
+
+##3
+Test if the quarter of birth(qob) meets the relevance criterion.
+```{r}
+# Convert to factor variables
+da.IV$married <- as.factor(da.IV$married)
+da.IV$qob <- as.factor(da.IV$qob)
+da.IV$SMSA <- as.factor(da.IV$SMSA)
+da.IV$yob <- as.factor(da.IV$yob)
+
+# To change those variables which should be factor variables into factor variables
+g1.1 <- ggplot(data = da.IV, aes(qob, educ)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  theme_bw() +
+  labs(caption = "Figure 2.1") +
+  geom_boxplot() + 
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold")) + 
+  labs(x = "Quarter of Birth", y = "Education(in years)")
+g1.1
+
+rsltIV <- ivreg(lnwage ~ educ|qob,data = da.IV)
+summary(rsltIV, diagnostics = TRUE)
+```
+<<<<<<< HEAD
+According to the boxplot, we can hardly see there is a strong correlation between the instrumental variable(qob) and the causal variable(educ). Therefore, we need to run a weak instruments test, which gets us a p-value < 2e-16. In terms of this p-value, we can reject the Null hypothesis, which indicates there should be a strong correlation between qob and educ.
+
+```{r}
+# Set directory
+dir <- "C:/Users/ppria/Documents/BAM_ASP_A2/data/"
+
+# Load csv and generate subset containing only variables for interest
+da.IV <- read.csv(file=paste0(dir, "IV_dataset.csv"), header=TRUE)
+da.IV <- subset(da.IV,select = c("age", "educ", "lnwage", "married", "qob", 
+                                 "SMSA", "yob"))
+
+```
+##4
+IV regression analysis of the effect of education (in years) on log wages using quarter of birth as instrument variable: The quarter of birth partially influences the years of education. We use the variation that qob has on education to estimate the effect of education on weekly earnings. 
+Tables presented below show that an extra year of education for people in the United States born between 1930-1939, leads to a 0.103% increase in weekly earnings. With a p-vale < 0.05, the estimated coefficient is statistically significant. 
+
+```{r}
+rslt2SLS.A <- ivreg(lnwage ~ educ | qob, data=da.IV)
+summary(rslt2SLS.A)
+stargazer(rslt2SLS.A, type= "text")
+```
+When adding marriage status and the indicator of living situation as control variables, there is a  decrease on the estimated coefficient from 0.103% to 0.1% with slightly lower standard errors still significant at 5% significance level. 
+```{r}
+rslt2SLS.A <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob, 
+                    data=da.IV)
+summary(rslt2SLS.A)
+stargazer(rslt2SLS.A, type= "text")
+```
+Moreover, the use of robust standard errors does no have a critical effect on the statistical inference of the estimated coefficient of "Education" nor the control variables "Married and SMSA".
+```{r}
+#Robust standard errors
+modelIV <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob , 
+                 data=da.IV)
+summary(modelIV)
+
+#Standard  errors (superfluous  in the  case of  seBasic)
+seBasic  <- sqrt(diag(vcov(modelIV)))
+seWhite  <- sqrt(diag(vcovHC(modelIV , type="HC0")))
+
+# Make  table  with  stargazer
+stargazer(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite), type= "text")
+summary(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite))
+```
+## 5
+
+Following the previous analysis, the same regressions are conducted with OLS as
+with IV. The results are shown in table X. 
+
+In order to determine for which of the models, OLS or IV, there is a relative
+preference, a Wu-Hausman test should be performed. A significant Wu-Hausman 
+test indicates that the IV model is preferred. The results for the Hu-Hausman 
+tests are shown in table X. For both models the Wu-Hausman test is not 
+significant, with p = 0.099 and p = 0.0839 respectively. Indicating that for 
+both models the OLS regression is relatively preferred. 
+
+A model is over-identified if the model has more instrumental variables than 
+endogenous variables. In order to test if the over-identified restriction 
+violates the independence assumption of the instruments a Sagan-Hansen test
+should be preformed. It is important to note that the Sagan-Hansen test can only
+be formed when the model is indeed over-identified. The Sagan-Hansen test tests 
+whether by adding one variable the model violates the assumption that the 
+instruments are uncorrelated with the error term. A significant Sagan-Hansen test
+indicates that the independence violation is violated. However, both of the IV
+models do not have more instrumental variables than endogenous variables. 
+Therefore, the Sagan-Hansen test cannot be performed. 
+
+*** We can perform a test on a model that is over-identified but not sure if we
+need to do that. >> Discuss on Tuesday.
+
+```{r}
+# Set dir >> Eline
+dir <- "C:/Users/eline/Documents/BAM/blok1/ASP/BAM_ASP_A2/"
+
+# Load csv and generate subset containing only variables for interest
+da.IV <- read.csv(file=paste0(dir, "data/IV_dataset.csv"), header=TRUE)
+da.IV_sub <- subset(da.IV,select = c("age", "educ", "lnwage", "married", "qob", 
+                                 "SMSA", "yob"))
+
+# Convert to factor variables
+da.IV_sub$married <- as.factor(da.IV_sub$married)
+da.IV_sub$qob <- as.factor(da.IV_sub$qob)
+da.IV_sub$SMSA <- as.factor(da.IV_sub$SMSA)
+da.IV_sub$yob <- as.factor(da.IV_sub$yob)
+
+# Define OLS models
+rsltOLS.A <- lm(lnwage ~ educ, data=da.IV_sub)
+rsltOLS.B <- lm(lnwage ~ educ + married + SMSA, data=da.IV_sub)
+
+# Define IV model 
+rsltSLS.A <- ivreg(lnwage ~ educ | qob, data=da.IV_sub)
+rsltSLS.B <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob, 
+                 data=da.IV_sub)
+rsltSLS.C <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + age + qob, 
+                 data=da.IV_sub)
+
+# Generate table containing both models
+stargazer(rsltOLS.A, rsltOLS.B, rsltSLS.A, rsltSLS.B, rsltSLS.C, type="text")
+
+# Test for violation over-identification
+summary(rsltSLS.A, diagnostics = TRUE)
+summary(rsltSLS.B, diagnostics = TRUE)
+summary(rsltSLS.C, diagnostics = TRUE)
+
+
+```
+
+## 6
+There are several possible causes of concern that could render the instrumental 
+variable identification strategy invalid. Firstly, in the US children are able to 
+start with school when their 5 years old, however, it is not mandatory until 
+they are of age 6. Therefore, children do not necessarily start in the same year 
+even if they turn 6 in the same year. Thus, some children could have more year 
+of education because they started school earlier.Moreover, it is a possibility 
+that children drop out of school even before they reach the legal age. 
+Furthermore, it is also possible that a person who dropped out of school decides 
+to restart their education in a later period in time. Therefore, dropping out 
+does not imply that the years of education cannot increase once one drops out of 
+school. Concluding, considering the possible causes of concern the measurement 
+of school years for dropout students could be inaccurate. 
