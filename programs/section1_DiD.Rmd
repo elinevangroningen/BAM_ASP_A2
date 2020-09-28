@@ -12,9 +12,8 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE,
 
 # Difference-in-Difference Analysis: Female Labor Participation 
 
-Downloading the libraries, setting the working directory and importing the data set 
-
 ```{r}
+#Downloading the libraries, setting the working directory and importing the data set 
 library(tidyverse)
 library(stargazer)
 library(dagitty)
@@ -33,10 +32,6 @@ dfDiD <- read.csv(file=paste0(dirData, "DiD_dataset.csv"))
 ## Preparing and analyzing the dataset 
 There is need to transform the dataset as it is already in the long-format, with observations in different rows for different time periods. There is no need to transform character to factor as all variables seem to be either numeric or integer. 
 
-```{r}
-
-```
-
 We have data from 1991 to 1996. In 1993, the EITC was implemented. A dummy variable *dPeriod* is created to indicate the time before and after the EITC policy. The years 1991 and 1992 take a value of 0, and 1993 and the years after 1993 take a value of 1.
 
 The EITC policy only applies to women with children. Therefore, we need to compare two groups of women. A dummy variable *dChildren* is created to indicate the different groups: women with and without any children. Women with no children take a value of 0 (non-treated group), whereas women with 1 or more children take a value of 1 (treated group).
@@ -45,7 +40,8 @@ Furthermore, the EITC only applies to low-income workers. Therefore, women in bo
 
 
 ```{r}
-str(dfDiD)
+#no need to transform the dataset, already in the long format 
+str(dfDiD) #all variable are numeric or integer, no need to tranform 
 
 
 dfDiD$dPeriod = ifelse(dfDiD$year >= 1993, 1, 0) 
@@ -150,6 +146,10 @@ avgtable.Work[3, "dPeriod"] <- NA
 stargazer(avgtable.Earn, summary=FALSE, align = TRUE, type="text", title = "Average Annual Earnings")
 stargazer(avgtable.Finc, summary=FALSE, align = TRUE, type="text", title = "Average Indicator Annual Family Income")
 stargazer(avgtable.Work, summary=FALSE, align = TRUE, type="text", title = "Average Indicator Work Status")
+
+stargazer(avgtable.Earn, summary=FALSE, align = TRUE, title = "Average Annual Earnings")
+stargazer(avgtable.Finc, summary=FALSE, align = TRUE, title = "Average Indicator Annual Family Income")
+stargazer(avgtable.Work, summary=FALSE, align = TRUE, title = "Average Indicator Work Status")
 ```
 
 As can be seen in the tables above, the average annual earnings of employed women without children decreased with 1,076.42 US Dollars after the implementation of the EITC. However, the average annual earnings of woman with children increased with 451,54 US Dollars after the implementation of the EITC. The difference-in-difference effect of the EITC on annual earnings of employed women is 1,076.42 $+$ 451.538 $=$ 1,527.96. 
@@ -178,7 +178,6 @@ rsltOLSWork <- lm(mdlWork, data=dfDiD)
 
 stargazer(rsltOLSEarn, rsltOLSFinc, rsltOLSWork,
           intercept.bottom = FALSE, align = TRUE, no.space=TRUE, type="text")
-
 ```
 
 Explain and interpret the findings. What is the effect of the policy introduction on the dependent variables? 
@@ -212,6 +211,9 @@ rsltOLS.control.work <- lm(mdl.control.work, data=dfDiD)
 
 stargazer(rsltOLS.control.earn, rsltOLS.control.finc, rsltOLS.control.work, 
            intercept.bottom = FALSE, align = TRUE, no.space=TRUE, type="text") 
+
+stargazer(rsltOLS.control.earn, rsltOLS.control.finc, rsltOLS.control.work, 
+           intercept.bottom = FALSE, align = TRUE, no.space=TRUE) 
 ```
 
 All control variables seem to be significant in the three regressions (p < 0.05). When controlling for the state unemployment rate, the unearned income and the number of children, the difference-in-difference effect of the EITC on *earn* decreased to 1,490.156. However, this coefficient is still not significant. 
