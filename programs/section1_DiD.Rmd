@@ -39,13 +39,14 @@ There is need to transform the dataset as it is already in the long-format, with
 
 We have data from 1991 to 1996. In 1993, the EITC was implemented. A dummy variable *dPeriod* is created to indicate the time before and after the EITC policy. The years 1991 and 1992 take a value of 0, and 1993 and the years after 1993 take a value of 1.
 
-The EITC policy only applies to women with children. Therefore, we need to compare two groups of women. A dummy variable *dChildren* is created to indicate the group of women with and without any children. Women with no children take a value of 0 (non-treated group), whereas women with 1 or more children take a value of 1 (treated group).
+The EITC policy only applies to women with children. Therefore, we need to compare two groups of women. A dummy variable *dChildren* is created to indicate the different groups: women with and without any children. Women with no children take a value of 0 (non-treated group), whereas women with 1 or more children take a value of 1 (treated group).
 
 Furthermore, the EITC only applies to low-income workers. Therefore, women in both the treated and the non-treated group should be employed (*work* = 1). In order to estimate the DiD effect of the policy on annual earnings (*earn*) and annual family income (*finc*), we create a subset of women that are employed. 
 
 
 ```{r}
 str(dfDiD)
+
 
 dfDiD$dPeriod = ifelse(dfDiD$year >= 1993, 1, 0) 
 dfDiD$cChildren = ifelse(dfDiD$children >= 1, 1, 0)
@@ -54,23 +55,55 @@ dfDiD.sub <- subset(dfDiD, work=="1")
 ```
 
 ## 1 Plotting the dependent variables 
-In the graphs below, the three dependent variables (annual earnings, annual family income and work status) are plotted.  
-
-to present visual evidence of the DiD effect. 
+In order to present visual evidence of the difference-in-difference effects, the aggregate function in R is used to compute the averages of the three dependent variables per year per group. 
 
 ```{r}
+#Earn
+#6 years for both groups, total of 12 averages (average by year and children (0/1)
+earn.agg = aggregate(dfDiD.sub$earn, list(dfDiD.sub$year, dfDiD.sub$cChildren == 1), FUN = mean, na.rm = TRUE) 
+names(earn.agg) = c("Year","Children","Earn") #rename variables
+#new variable with group name
+earn.agg$Group[1:6] = "Women without children"
+earn.agg$Group[7:12] = "Women with children"
 
-ggplot(data = dfDiD, aes(year, earn, color = cChildren)) +
-    stat_summary(geom = 'line') +
-    geom_vline(xintercept = 1993) +
-    theme_bw()
+Earn.plot <- qplot(Year, Earn, data=earn.agg, geom=c("point","line"), colour = Group,
+  xlab="Year", ylab="Annual earnings") + 
+  geom_vline(xintercept = 1993) + 
+  theme_bw() 
+ggsave(file="Earn.pdf", width=7, height=4)
 
-ggplot(data = dfDiD.sub, aes(year, earn)) + 
-  stat_summary(geom = 'line') +
+#Finc
+finc.agg = aggregate(dfDiD.sub$finc, list(dfDiD.sub$year, dfDiD.sub$cChildren == 1), FUN = mean, na.rm = TRUE) 
+names(finc.agg) = c("Year","Children","Finc")
+finc.agg$Group[1:6] = "Women without children"
+finc.agg$Group[7:12] = "Women with children"
+
+Finc.plot <- qplot(Year, Finc, data=finc.agg, geom=c("point","line"), colour = Group,
+  xlab="Year", ylab="Annual Family Income") + 
   geom_vline(xintercept = 1993) +
-  theme_bw()
+  theme_bw() 
+ggsave(file="Finc.pdf", width=7, height=4)
+
+#Work
+work.agg = aggregate(dfDiD$work, list(dfDiD$year, dfDiD$cChildren == 1), FUN = mean, na.rm = TRUE)
+names(work.agg) = c("Year","Children","Work")
+
+work.agg$Group[1:6] = "Women without children"
+work.agg$Group[7:12] = "Women with children"
+
+Work.plot <- qplot(Year, Work, data=work.agg, geom=c("point","line"), colour = Group,
+  xlab="Year", ylab="Work")+ 
+  geom_vline(xintercept = 1993) +
+  theme_bw() 
+ggsave(file="Work.pdf", width=7, height=4)
 
 ```
+
+As can be seen in figure 1.1 and 1.2, there is an increase in the annual earnings and annual family income of women with children after the EITC was implemented. The annual earnings of women without any children seems more or less constant, with a relatively small increase in 1995.   
+
+Figure 1.3 shows an increase of employed women with children after the implementation of the EITC. However, there seems to a decrease of employed women without children after the EITC was implemented. 
+
+Based on the graphs above, the EITC seems to have a positive effect on annual earnings (*earn*), annual family income (*finc*) and rate of employment (*work*). 
 
 ## 2 Summary statistics of the dataset 
 
@@ -149,32 +182,47 @@ stargazer(rsltOLSEarn, rsltOLSFinc, rsltOLSWork,
 ```
 
 Explain and interpret the findings. What is the effect of the policy introduction on the dependent variables? 
-Based on the DiD regression in the table above, the difference-in-difference effect of the EITC on annual earnings is 1,527.96. This indicates an increase in annual earnings of employed women with atleast 1 child after the implementation of the EITC. However, this coefficient is not significant. 
+Based on the DiD regression in the table above, the difference-in-difference effect of the EITC on annual earnings is 1,527.959. This indicates an increase in annual earnings of employed women with atleast 1 child after the implementation of the EITC. However, this coefficient is not significant. 
 
-Similarly, the effect of the EITC on annual family income based on the regression above, is 1,803.82. This coefficient indicates that the EITC increased the annual family income of employed woman with atleast 1 child. This coefficient is significant (p < 0.01). 
+Similarly, the effect of the EITC on annual family income based on the regression above, is 1,803.822. The coefficient is significant (p < 0.01). This indicates that the EITC increased the annual family income of employed woman with at least one child. 
 
-The difference-in-difference effect of the EITC on the rate of employment of women is 0.031. This coefficient can be interpreted as the increase in employment of women with atleast 1 child, that is, an increase of approximately 3%. This coefficient is significant (p < 0.01). 
+The difference-in-difference effect of the EITC on the rate of employment of women is 0.031. The coefficient is significant (p < 0.01). This indicates that the EITC increased the rate of employed of women with at least one child. That, an increase of approximately 3%. 
 
 ## Control variables 
-A possible explanation for the results may be that state specific characteristics are not taken into account when comparing averages. Therefore, the state unemployment rate (*urate*) is added as a control variable. The rate of unemployment in states may have an effect on *work*, as women living in a state with a high unemployment rate are likely to be unemployed (*work* = 0) 
+To control for other variables that may have an influence on the difference-in-difference effect of the EITC, control variables are added to the regressions of the three dependent variables. 
+
+A possible explanation for the obtained regression results may be that state specific characteristics are not taken into account when comparing averages. Therefore, the state unemployment rate (*urate*) is added as a control variable. The rate of unemployment in states may have an effect on *work*, as women living in a state with a high unemployment rate are likely to be unemployed (*work* = 0) 
 
 Another possible explanation for the results may be the unearned income of women (*unearn*). Women with a high income gained through other resources than work, e.g. through inheritance or investments, may be less inclined to work (*work* = 0). Therefore, *unearn* is added as a control variable. 
  
-Lastly, the number of children of woman (*children*) is added as a control variable. It is expected that women with more than 2 children work less than women with less than 2 children, as they may have a harder time balancing work and family life (*work* = 0). Consequently, this variable is added as a control variable. 
+Lastly, the number of children of woman (*children*) is added as a control variable. It is expected that women with more children work less than women with a few children, as they may have a harder time balancing work and family life (*work* = 0). Consequently, this variable is added as a control variable. 
 
-```{r}
-# EXAMPLE 
-mdlB <- employ ~ dState + dPeriod + dState:dPeriod + prix  #prix as controlvariables
-mdlC <- employ ~ dState + dPeriod + dState:dPeriod + prix + as.factor(SHEET) #restaurant specific factors as controlvariable
+```{r} 
+#Earn
+mdl.control.earn <- earn ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children
+rsltOLS.control.earn <- lm(mdl.control.earn, data=dfDiD.sub)
 
+#Finc
+mdl.control.finc <- finc ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children 
+rsltOLS.control.finc <- lm(mdl.control.finc, data=dfDiD.sub)
 
+#Work
+mdl.control.work <- work ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children
+rsltOLS.control.work <- lm(mdl.control.work, data=dfDiD)
+
+stargazer(rsltOLS.control.earn, rsltOLS.control.finc, rsltOLS.control.work, 
+           intercept.bottom = FALSE, align = TRUE, no.space=TRUE, type="text") 
 ```
 
-Does robust standard errors seem necessary?
+All control variables seem to be significant in the three regressions (p < 0.05). When controlling for the state unemployment rate, the unearned income and the number of children, the difference-in-difference effect of the EITC on *earn* decreased to 1,490.156. However, this coefficient is still not significant. 
+
+Similarly, the difference-in-difference effect of the EITC on *finc* decreased from 1,803.822 to 1,490.156. However, after adding the control variables, the effect became insignificant. 
+
+Furthermore, the difference-in-difference effect of the EITC on *work* increased from 0.031 to 0.035. The significance increased as well (p < 0.05). This indicates that if the state unemployment rate, the unearned income and the number of children are contolled for, the EITC led to a larger growth in employment of women with children (approximately 4%). 
+
+## Robust standard errors 
 
 ```{r}
-
-
 
 ```
 
