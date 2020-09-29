@@ -14,19 +14,82 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE,
 
 Downloading the libraries 
 
+Definition dependent variable:
+Border compliance captures the time and cost associated with compliance with the 
+economy’s customs regulations and with regulations relating to other inspections 
+that are mandatory in order for the shipment to cross the economy’s border, as 
+well as the time and cost for handling that takes place at its port or border. 
+The time and cost for this segment include time and cost for customs clearance 
+and inspection procedures conducted by other government agencies.
+(Source: https://data.worldbank.org/indicator/IC.EXP.TMBC?end=2019&start=2014)
 ```{r}
+# Load libraries
 library(tidyverse)
 library(stargazer)
-library(dagitty)
-library(gridExtra)
-library(tinytex)
+library(wbstats)
+
+# Define paths 
+dir <- "C:/Users/eline/Documents/BAM/blok1/ASP/BAM_ASP_A2/"
+dirProg <- paste0(dir, "programs/")
+dirData <- paste0(dir, "data/")
+dirRslt <- paste0(dir, "results/")
+
+# Load world bank data
+dfExport <- wb_data(indicator=c("IC.EXP.TMBC",       # Time to export
+                                "NY.GDP.PCAP.CD",    # GDP per capita
+                                "TG.VAL.TOTL.GD.ZS", # Merchandise trade % GDP
+                                "NE.EXP.GNFS.ZS",    # Exports of goods and services (% of GDP)
+                                "IC.EXP.CSDC.CD"),   # Cost to export 
+                                country = "countries_only", 
+                                start_date = 2014, 
+                                end_date = 2019)
+
+# Load and save file with variables of interest
+save(dfExport, file=paste0(dirData, "SelectedWorldData.sav"))
+load(file=paste0(dirData, "SelectedWorldData.sav"))
+
+# Rename column names 
+colnames(dfExport)[colnames(dfExport) == "date"]              <- "Year"
+colnames(dfExport)[colnames(dfExport) == "country"]           <- "Country"
+colnames(dfExport)[colnames(dfExport) == "date"]              <- "Year"
+colnames(dfExport)[colnames(dfExport) == "IC.EXP.TMBC"]       <- "TimeExport"
+colnames(dfExport)[colnames(dfExport) == "NY.GDP.PCAP.CD"]    <- "GDPPerCap"
+colnames(dfExport)[colnames(dfExport) == "TG.VAL.TOTL.GD.ZS"] <- "MerchandiseGDP"
+colnames(dfExport)[colnames(dfExport) == "NE.EXP.GNFS.ZS"]    <- "ExportGoodsServices"
+colnames(dfExport)[colnames(dfExport) == "IC.EXP.CSDC.CD"]    <- "CostExport"
+
+# Subset complete observations, and implement an admittedly arbitrary 
+# observation period
+dfExport.sub <- dfExport[complete.cases(dfExport),]
+
+# Generate list with all countries with complete observations
+complete <- dfExport.sub %>%
+  count(Country) %>%
+  filter(n == 6)
+completeCountry <- as.vector(complete$Country)
+
+# Generate data frame only containing countries with complete observations
+dfExport.sub.cmplt <- dfExport.sub %>%
+  filter(Country %in% completeCountry)
+
+# Convert to data frame
+dfExport.sub.cmplt <- as.data.frame(dfExport.sub.cmplt)
+
+# Generate table with summary statistics
+stargazer(dfExport.sub.cmplt, type="text")
+
 ```
 
 ## 1 
 
 ```{r}
+# Plot Cost Export
+plot_CostExport <- ggplot(dfExport.sub.cmplt, aes(x=CostExport, y=TimeExport, color=Country)) +
+  geom_point() + geom_smooth()
 
+plot_CostExport
 
+  
 ```
 
 ## 2
