@@ -122,16 +122,17 @@ IV regression analysis of the effect of education (in years) on log wages using 
 Tables presented below show that an extra year of education for people in the United States born between 1930-1939, leads to a 0.103% increase in weekly earnings. With a p-vale < 0.05, the estimated coefficient is statistically significant. 
 
 ```{r}
+library(ivreg)
 rslt2SLS.A <- ivreg(lnwage ~ educ | qob, data=da.IV)
 summary(rslt2SLS.A)
 stargazer(rslt2SLS.A, type= "text")
 ```
 When adding marriage status and the indicator of living situation as control variables, there is a  decrease on the estimated coefficient from 0.103% to 0.1% with slightly lower standard errors still significant at 5% significance level. 
 ```{r}
-rslt2SLS.A <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob, 
+rslt2SLS.B <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob, 
                     data=da.IV)
 summary(rslt2SLS.A)
-stargazer(rslt2SLS.A, type= "text")
+stargazer(rslt2SLS.A, rslt2SLS.B)
 ```
 Moreover, the use of robust standard errors does no have a critical effect on the statistical inference of the estimated coefficient of "Education" nor the control variables "Married and SMSA".
 ```{r}
@@ -143,7 +144,8 @@ summary(modelIV)
 #Standard  errors (superfluous  in the  case of  seBasic)
 seBasic  <- sqrt(diag(vcov(modelIV)))
 seWhite  <- sqrt(diag(vcovHC(modelIV , type="HC0")))
-
+library(vcov)
+library(vcovHC)
 # Make  table  with  stargazer
 stargazer(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite), type= "text")
 summary(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite))
@@ -216,11 +218,14 @@ There are several possible causes of concern that could render the instrumental
 variable identification strategy invalid. Firstly, in the US children are able to 
 start with school when their 5 years old, however, it is not mandatory until 
 they are of age 6. Therefore, children do not necessarily start in the same year 
-even if they turn 6 in the same year. Thus, some children could have more year 
-of education because they started school earlier.Moreover, it is a possibility 
-that children drop out of school even before they reach the legal age. 
-Furthermore, it is also possible that a person who dropped out of school decides 
-to restart their education in a later period in time. Therefore, dropping out 
-does not imply that the years of education cannot increase once one drops out of 
-school. Concluding, considering the possible causes of concern the measurement 
-of school years for dropout students could be inaccurate. 
+even if they turn 6 in the same year. Thus, some children could have more years 
+of education because they started school earlier. Moreover, it is a possibility 
+that children drop out of school even before they reach the legal age due to certain 
+circumstances which will affect the years of education regardless the legal dropout age.
+Next to that, the legal age for dropouts in America varies per state. Thus, students are able 
+to drop out of school at ages varying from 16 to 18 depending on where they live, 
+resulting in a difference of two years of mandatory education. Furthermore, it is 
+also possible that a person who dropped out of school decides to restart their education 
+in a later period in time. Therefore, dropping out does not imply that the years of education 
+cannot increase once one drops out of school. Concluding, considering the possible 
+causes of concern the measurement of school years for dropout students could be inaccurate. 
