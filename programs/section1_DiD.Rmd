@@ -21,6 +21,8 @@ library(gridExtra)
 library(tinytex)
 library(ggplot2)
 library(tidyr)
+library(sandwich)
+library(multiwayvcov)
 
 dir <- "/Users/valeriemaasdamme/Documents/BAM_ASP_A2" 
 dirProg <- paste0(dir, "/programs/") 
@@ -147,9 +149,6 @@ stargazer(avgtable.Earn, summary=FALSE, align = TRUE, type="text", title = "Aver
 stargazer(avgtable.Finc, summary=FALSE, align = TRUE, type="text", title = "Average Indicator Annual Family Income")
 stargazer(avgtable.Work, summary=FALSE, align = TRUE, type="text", title = "Average Indicator Work Status")
 
-stargazer(avgtable.Earn, summary=FALSE, align = TRUE, title = "Average Annual Earnings")
-stargazer(avgtable.Finc, summary=FALSE, align = TRUE, title = "Average Indicator Annual Family Income")
-stargazer(avgtable.Work, summary=FALSE, align = TRUE, title = "Average Indicator Work Status")
 ```
 
 As can be seen in the tables above, the average annual earnings of employed women without children decreased with 1,076.42 US Dollars after the implementation of the EITC. However, the average annual earnings of woman with children increased with 451,54 US Dollars after the implementation of the EITC. The difference-in-difference effect of the EITC on annual earnings of employed women is 1,076.42 $+$ 451.538 $=$ 1,527.96. 
@@ -198,22 +197,20 @@ Lastly, the number of children of woman (*children*) is added as a control varia
 
 ```{r} 
 #Earn
-mdl.control.earn <- earn ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children
+mdl.control.earn <- earn ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children 
 rsltOLS.control.earn <- lm(mdl.control.earn, data=dfDiD.sub)
 
 #Finc
-mdl.control.finc <- finc ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children 
+mdl.control.finc <- finc ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children
 rsltOLS.control.finc <- lm(mdl.control.finc, data=dfDiD.sub)
 
 #Work
-mdl.control.work <- work ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children
+mdl.control.work <- work ~ cChildren + dPeriod + cChildren:dPeriod + urate + unearn + children 
 rsltOLS.control.work <- lm(mdl.control.work, data=dfDiD)
 
 stargazer(rsltOLS.control.earn, rsltOLS.control.finc, rsltOLS.control.work, 
            intercept.bottom = FALSE, align = TRUE, no.space=TRUE, type="text") 
 
-stargazer(rsltOLS.control.earn, rsltOLS.control.finc, rsltOLS.control.work, 
-           intercept.bottom = FALSE, align = TRUE, no.space=TRUE) 
 ```
 
 All control variables seem to be significant in the three regressions (p < 0.05). When controlling for the state unemployment rate, the unearned income and the number of children, the difference-in-difference effect of the EITC on *earn* decreased to 1,490.156. However, this coefficient is still not significant. 
@@ -223,9 +220,84 @@ Similarly, the difference-in-difference effect of the EITC on *finc* decreased f
 Furthermore, the difference-in-difference effect of the EITC on *work* increased from 0.031 to 0.035. The significance increased as well (p < 0.05). This indicates that if the state unemployment rate, the unearned income and the number of children are contolled for, the EITC led to a larger growth in employment of women with children (approximately 4%). 
 
 ## Robust standard errors 
+The Breusch-Pagan test for heteroskedasticity was used to assess whether robust standard errors are necessary. The test was significant, which indicates a correlation between the predicted Y values and the error terms for all three DiD regressions. The detected heteroskedasticity is controlled for with White heteroskedasticity consistent standard errors and clustered standard errors (clustering based on *state*). The use of robust standard errors (White and clustered) does not have a critical effect on the statistical significance of the estimated DiD effect or the significance of the control variables. With the exception of the control variable *unearn*, that became less significant (p < 0.01) in the regression on *earn* after adding the White standard errors. Remarkably, the use of White standard errors leads to a smaller standard error compared to the base case for all three regressions, while the clustered standard errors remains the same as the base case. 
 
 ```{r}
+#Test for heteroskedasticity 
+rsltOLS.control.earn2 <- lm(mdl.control.earn, data=dfDiD.sub)
+rsltOLS.control.finc2 <- lm(mdl.control.finc, data=dfDiD.sub)
+rsltOLS.control.work2 <- lm(mdl.control.work, data=dfDiD)
 
+# EARN
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.earn2), rsid = residuals(rsltOLS.control.earn2)),
+       aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+lmtest::bptest(rsltOLS.control.earn2) 
+# p < 0.001, indicates a significant correlation between the predicted values and the disturbances. 
+# Heteroskedastiscity is detected.
+
+#FINC
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.finc2), rsid = residuals(rsltOLS.control.finc2)),
+       aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+lmtest::bptest(rsltOLS.control.finc2) 
+# p < 0.001, indicates a significant correlation between the predicted values and the disturbances. 
+# Heteroskedastiscity is detected.
+
+#WORK
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.work2), rsid = residuals(rsltOLS.control.work2)),
+       aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+lmtest::bptest(rsltOLS.control.work2) 
+# p < 0.001, indicates a significant correlation between the predicted values and the disturbances 
+# Heteroskedastiscity is detected
+
+#Standard  errors 
+seBasicEarn  <- sqrt(diag(vcov(rsltOLS.control.earn2)))
+seWhiteEarn  <- sqrt(diag(vcovHC(rsltOLS.control.earn2, type="HC0")))
+seClusterEarn <- sqrt(diag(vcov(rsltOLS.control.earn2, cluster="state"))) 
+stargazer(rsltOLS.control.earn2, rsltOLS.control.earn2, rsltOLS.control.earn2, 
+          se=list(seBasicEarn, seWhiteEarn, seClusterEarn), type="text") 
+#No impact on the significance of the DiD effect, still insignificant 
+#Standard error of seWhite seems smaller than basic and clustered 
+
+seBasicFinc  <- sqrt(diag(vcov(rsltOLS.control.finc2)))
+seWhiteFinc  <- sqrt(diag(vcovHC(rsltOLS.control.finc2, type="HC0")))
+seClusterFinc <- sqrt(diag(vcov(rsltOLS.control.finc2, cluster="state"))) 
+stargazer(rsltOLS.control.finc2, rsltOLS.control.finc2, rsltOLS.control.finc2, 
+          se=list(seBasicFinc, seWhiteFinc, seClusterFinc), type="text")
+#No impact on the significance of the DiD effect, still insignificant
+#Standard error of seWhite seems smaller than basic and clustered 
+
+seBasicWork  <- sqrt(diag(vcov(rsltOLS.control.work2)))
+seWhiteWork  <- sqrt(diag(vcovHC(rsltOLS.control.work2, type="HC0")))
+seClusterWork <- sqrt(diag(vcov(rsltOLS.control.work2, cluster="state"))) 
+stargazer(rsltOLS.control.work2, rsltOLS.control.work2, rsltOLS.control.work2, 
+          se=list(seBasicWork, seWhiteWork, seClusterWork), type="text")
+#No impact on the significance of the DiD effect, all three significant (p<0.05).
+#Standard error for all three remains the same
+
+stargazer(rsltOLS.control.earn2, rsltOLS.control.earn2, rsltOLS.control.earn2, 
+          rsltOLS.control.finc2, rsltOLS.control.finc2, rsltOLS.control.finc2,
+          rsltOLS.control.work2, rsltOLS.control.work2, rsltOLS.control.work2, 
+          se=list(seBasicEarn, seWhiteEarn, seClusterEarn,
+                  seBasicFinc, seWhiteFinc, seClusterFinc,
+                  seBasicWork, seWhiteWork, seClusterWork), type="text") 
 ```
 
 
