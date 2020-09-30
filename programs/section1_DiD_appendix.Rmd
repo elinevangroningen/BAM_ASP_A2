@@ -1,7 +1,5 @@
 ---
-title: "Appendix"
-author: "Eline van Groningen, Paola Priante, Valery Maasdamme, Yuhu Wang"
-date: "9/25/2020"
+title: "Appendix Difference-in-Difference Analysis: Female Labor Participation"
 output: pdf_document
 ---
 
@@ -9,8 +7,6 @@ output: pdf_document
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
                       comment = "", fig.height=2, fig.width=4, fig.align = "center")
 ```
-
-## Difference-in-Difference Analysis: Female Labor Participation 
 
 ```{r}
 #Downloading the libraries, setting the working directory and importing the data set 
@@ -24,6 +20,7 @@ library(tidyr)
 library(dplyr)
 library(plyr)
 library(reshape2)
+library(sandwich)
 
 dir <- "/Users/valeriemaasdamme/Documents/BAM_ASP_A2" 
 dirProg <- paste0(dir, "/programs/") 
@@ -182,7 +179,77 @@ stargazer(rsltOLS.control.earn, rsltOLS.control.finc,
 ```
 
 ## Robust standard errors 
+```{r, results='hide'}
+#Test for heteroskedasticity 
+rsltOLS.control.earn2 <- lm(mdl.control.earn, data=dfDiD.sub)
+rsltOLS.control.finc2 <- lm(mdl.control.finc, data=dfDiD.sub)
+rsltOLS.control.work2 <- lm(mdl.control.work, data=dfDiD)
+
+# EARN
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.earn2), 
+  rsid = residuals(rsltOLS.control.earn2)),
+  aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+lmtest::bptest(rsltOLS.control.earn2) 
+# p < 0.01, heteroskedastiscity is detected.
+
+#FINC
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.finc2), 
+  rsid = residuals(rsltOLS.control.finc2)),
+  aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+lmtest::bptest(rsltOLS.control.finc2) 
+# p < 0.01, heteroskedastiscity is detected.
+
+#WORK
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.work2), 
+  rsid = residuals(rsltOLS.control.work2)),
+  aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+lmtest::bptest(rsltOLS.control.work2) 
+# p < 0.01, heteroskedastiscity is detected
+```
+
 ```{r}
+#Standard  errors 
+seBasicEarn  <- sqrt(diag(vcov(rsltOLS.control.earn2)))
+seWhiteEarn  <- sqrt(diag(vcovHC(rsltOLS.control.earn2, type="HC0")))
+seClusterEarn <- sqrt(diag(vcov(rsltOLS.control.earn2, cluster="state"))) 
+stargazer(rsltOLS.control.earn2, rsltOLS.control.earn2, rsltOLS.control.earn2, 
+          se=list(seBasicEarn, seWhiteEarn, seClusterEarn), type="text") 
+#No impact on the significance of the DiD effect, still insignificant 
+#Standard error of seWhite seems smaller than basic and clustered 
+
+seBasicFinc  <- sqrt(diag(vcov(rsltOLS.control.finc2)))
+seWhiteFinc  <- sqrt(diag(vcovHC(rsltOLS.control.finc2, type="HC0")))
+seClusterFinc <- sqrt(diag(vcov(rsltOLS.control.finc2, cluster="state"))) 
+stargazer(rsltOLS.control.finc2, rsltOLS.control.finc2, rsltOLS.control.finc2, 
+          se=list(seBasicFinc, seWhiteFinc, seClusterFinc), type="text")
+#No impact on the significance of the DiD effect, still insignificant
+#Standard error of seWhite seems smaller than basic and clustered 
+
+seBasicWork  <- sqrt(diag(vcov(rsltOLS.control.work2)))
+seWhiteWork  <- sqrt(diag(vcovHC(rsltOLS.control.work2, type="HC0")))
+seClusterWork <- sqrt(diag(vcov(rsltOLS.control.work2, cluster="state"))) 
+stargazer(rsltOLS.control.work2, rsltOLS.control.work2, rsltOLS.control.work2, 
+          se=list(seBasicWork, seWhiteWork, seClusterWork), type="text")
+#No impact on the significance of the DiD effect, all three significant (p<0.05).
+#Standard error for all three remains the same
 
 ```
 
