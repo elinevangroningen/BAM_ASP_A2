@@ -171,7 +171,12 @@ whether by adding one variable the model violates the assumption that the
 instruments are uncorrelated with the error term. A significant Sagan-Hansen test
 indicates that the independence violation is violated. However, both of the IV
 models do not have more instrumental variables than endogenous variables. 
-Therefore, the Sagan-Hansen test cannot be performed. 
+Therefore, the Sagan-Hansen test cannot be performed. Therefore, an over identified 
+model is defined with both *qob* and *age* as instrumental variables. The results
+of this model are shown in table X model X. For this model the Sagan-Hansen is 
+performed, the test results where significant with p = 4.31e-05. Indicating that
+the assumption that instruments are uncorrelated with the error term is violated.
+
 
 *** We can perform a test on a model that is over-identified but not sure if we
 need to do that. >> Discuss on Tuesday.
