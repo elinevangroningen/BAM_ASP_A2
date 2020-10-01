@@ -79,7 +79,7 @@ dfExport.sub.cmplt <- dfExport.sub %>%
 dfExport.sub.cmplt <- as.data.frame(dfExport.sub.cmplt)
 
 # Generate table with summary statistics
-stargazer(dfExport.sub.cmplt, type="text")
+stargazer(dfExport.sub.cmplt)
 
 ```
 
@@ -92,8 +92,13 @@ plot_CostExport <- ggplot(dfExport.sub.cmplt, aes(x=CostExport, y=TimeExport, co
 
 plot_CostExport
 
-subCountries <- c("Australia", "Bolivia", "Brazil", "Portugal", "Thailand", "Zimbabwe", "Bangladesh", "Bulgaria", "China", "Denmark", "France", "Finland", "India")
-dfExport.sub.cmplt <- dfExport.sub.cmplt[dfExport.sub.cmplt$Country %in% subCountries,]
+subCountries <- c("Australia", "Bolivia", "Brazil", "Portugal", "Thailand", 
+                  "Zimbabwe", "Bangladesh", "Bulgaria", "China", "Denmark", 
+                  "France", "Finland", "India")
+
+dfExport.sub.cmplt <- 
+  dfExport.sub.cmplt[dfExport.sub.cmplt$Country %in% subCountries,]
+
 ggplot(dfExport.sub.cmplt, aes(x=CostExport, y=TimeExport))+
   #add the annual outcomes coloured by Country
   geom_point(aes(color=Country), size=1)+
@@ -124,9 +129,8 @@ ggsave(
 ## 2
 Preparing data for regression
 ```{r}
-# Determine country averages of the included variables, as well
-# as the number of non missing observations during the 
-# selected observation period
+# Determine country averages of the included variables, as well as the number of 
+# non missing observations during the selected observation period
 dfExport.sub.cmplt.avg <- 
   ddply(dfExport.sub.cmplt, .(Country), summarise,
         avg.TimeExport   = mean(TimeExport, na.rm=TRUE),
@@ -136,23 +140,27 @@ dfExport.sub.cmplt.avg <-
         avg.MerchandiseGDP   = mean(MerchandiseGDP, na.rm=TRUE),
         numValid         = length(Country))
 
-# Merge averages in dfWorld.avg with dfWorld.sub (this can be done
-# with 'mutate', but then the concise data frame with country
-# average will not be made available
-dfExport.sub.cmplt <- merge(dfExport.sub.cmplt, dfExport.sub.cmplt.avg, by="Country")
+# Merge averages in dfWorld.avg with dfWorld.sub (this can be done with 
+# 'mutate', but then the concise data frame with country average will not be 
+# made available
+dfExport.sub.cmplt <- merge(dfExport.sub.cmplt, dfExport.sub.cmplt.avg, 
+                            by="Country")
 
 attach(dfExport.sub.cmplt)
 dfExport.sub.cmplt$diff.TimeExport   <- TimeExport   - avg.TimeExport
 dfExport.sub.cmplt$diff.GDPPerCap    <- GDPPerCap    - avg.GDPPerCap
 dfExport.sub.cmplt$diff.CostExport   <- CostExport   - avg.CostExport
-dfExport.sub.cmplt$diff.ExportGoodsServices <- ExportGoodsServices  - avg.ExportGoodsServices
-dfExport.sub.cmplt$diff.MerchandiseGDP   <- MerchandiseGDP   - avg.MerchandiseGDP
+dfExport.sub.cmplt$diff.ExportGoodsServices <- ExportGoodsServices  - 
+  avg.ExportGoodsServices
+dfExport.sub.cmplt$diff.MerchandiseGDP   <- MerchandiseGDP   - 
+  avg.MerchandiseGDP
 detach(dfExport.sub.cmplt)
 ```
 Pooled Regression
 ```{r}
 #Formulate the model (very ad hoc)
-mdlA <- TimeExport ~ GDPPerCap + CostExport + ExportGoodsServices + MerchandiseGDP
+mdlA <- TimeExport ~ GDPPerCap + CostExport + ExportGoodsServices + 
+  MerchandiseGDP
 
 #Make between and within group data frames
 
@@ -180,7 +188,8 @@ colnames(dfExport.between) <-
 ## Estimation of the pooled model
 rsltPool <- lm(mdlA, data= dfExport.sub.cmplt)
 summary(rsltPool)
-stargazer::stargazer(rsltPool, align=TRUE, no.space=TRUE, intercept.bottom=FALSE, type="text")
+stargazer::stargazer(rsltPool, align=TRUE, no.space=TRUE, 
+                     intercept.bottom=FALSE, type="text")
 
 ```
 Between regression
@@ -195,10 +204,12 @@ stargazer::stargazer(rsltPool, rsltBetween, aling=TRUE, no.space=TRUE,
 ```
 Fixed Effect Regression
 ```{r}
-rsltFE.Country <- plm(mdlA, data= dfExport.sub.cmplt, index= c("Country", "Year"), model="within")
+rsltFE.Country <- plm(mdlA, data= dfExport.sub.cmplt, 
+                      index= c("Country", "Year"), model="within")
 #Tabulate the results 
 summary(rsltFE.Country)
-stargazer::stargazer(rsltPool, rsltFE.Country, align=TRUE, no.space=TRUE, intercept.bottom=FALSE, type="text")
+stargazer::stargazer(rsltPool, rsltFE.Country, align=TRUE, no.space=TRUE, 
+                     intercept.bottom=FALSE, type="text")
 #Explore the estimated intercepts
 summary(fixef(rsltFE.Country, type="dmean"))
 
@@ -206,11 +217,14 @@ summary(fixef(rsltFE.Country, type="dmean"))
 Random Effect Regression
 ```{r}
 #Estimate random effect model ('random')
-rsltRE.Country <- plm(mdlA, data=dfExport.sub.cmplt, index=c("Country", "Year"), model= "random")
+rsltRE.Country <- plm(mdlA, data=dfExport.sub.cmplt, 
+                      index=c("Country", "Year"), model= "random")
 
 #Tabulate the results
 summary(rsltRE.Country)
-stargazer::stargazer(rsltPool, rsltFE.Country, rsltRE.Country, align=TRUE, no.space=TRUE, intercept.bottom=FALSE, type="text")
+stargazer::stargazer(rsltPool, rsltFE.Country, rsltRE.Country, 
+                     align=TRUE, no.space=TRUE, intercept.bottom=FALSE, 
+                     type="text")
 
 ```
 
@@ -218,18 +232,19 @@ stargazer::stargazer(rsltPool, rsltFE.Country, rsltRE.Country, align=TRUE, no.sp
 ## 3 Tests
 
 ```{r}
-#Evaluate the fixed effects model versus the pooled regression model
-#Last minute of tutorial #4 Panel Data
-#An insignificant tests tells that all models are consistent
-#A significant tests rejects the hypothesis in favor of the fix effects model 
+# Evaluate the fixed effects model versus the pooled regression model
+# Last minute of tutorial #4 Panel Data
+# An insignificant tests tells that all models are consistent
+# A significant tests rejects the hypothesis in favor of the fix effects model 
 pFtest(rsltFE.Country, rsltPool)
 pooltest(rslt.Pooling, rsltFE.Country)
 
-#How do we now when to use fixed and when to use random?
-#Hausman test: compare random and fixed effects models
-#Under H0, no correlation between disturbance and explanatory variables, 
-#both RE and FE are consistent (though FE is not efficient), under H1, correlation between disturbance, only FE consistent
-#Last two minutes of tutorial #5 Panel Data 
+# How do we now when to use fixed and when to use random?
+# Hausman test: compare random and fixed effects models
+# Under H0, no correlation between disturbance and explanatory variables, 
+# both RE and FE are consistent (though FE is not efficient), under H1, 
+# correlation between disturbance, only FE consistent
+# Last two minutes of tutorial #5 Panel Data 
 phtest(rsltFE.Country, rsltRE.Country)
 
 ```
