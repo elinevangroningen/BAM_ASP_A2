@@ -25,7 +25,6 @@ library(sandwich)
 dir <- "/Users/valeriemaasdamme/Documents/BAM_ASP_A2" 
 dirProg <- paste0(dir, "/programs/") 
 dirData <- paste0(dir, "/Data/")
-
 dfDiD <- read.csv(file=paste0(dirData, "DiD_dataset.csv"))
 ```
 
@@ -34,10 +33,8 @@ dfDiD <- read.csv(file=paste0(dirData, "DiD_dataset.csv"))
 # no need to transform the dataset, already in the long format 
 str(dfDiD) # all variables are numeric or integer, no need to tranform 
 
-
 dfDiD$dPeriod = ifelse(dfDiD$year >= 1993, 1, 0) # dummy variable for period
 dfDiD$cChildren = ifelse(dfDiD$children >= 1, 1, 0) # dummy for different groups 
-
 dfDiD.sub <- subset(dfDiD, work=="1") #creating a subset of employed women 
 ```
 
@@ -56,7 +53,8 @@ Earn.plot <- qplot(Year, Earn, data=earn.agg, geom=c("point","line"),
   colour = Group,
   xlab="Year", ylab="Annual earnings") + 
   geom_vline(xintercept = 1993) + 
-  theme_bw() 
+  theme_bw(base_size = 15) +
+  theme(axis.title = element_text(size = 20))
 ggsave(file="Earn.pdf", width=7, height=4)
 
 #Finc
@@ -70,7 +68,8 @@ Finc.plot <- qplot(Year, Finc, data=finc.agg, geom=c("point","line"),
   colour = Group,
   xlab="Year", ylab="Annual Family Income") + 
   geom_vline(xintercept = 1993) +
-  theme_bw() 
+  theme_bw(base_size = 15) +
+  theme(axis.title = element_text(size = 20))
 ggsave(file="Finc.pdf", width=7, height=4)
 
 #Work
@@ -85,14 +84,21 @@ Work.plot <- qplot(Year, Work, data=work.agg, geom=c("point","line"),
   colour = Group,
   xlab="Year", ylab="Work")+ 
   geom_vline(xintercept = 1993) +
-  theme_bw() 
+  theme_bw(base_size = 15) +
+  theme(axis.title = element_text(size = 20))
 ggsave(file="Work.pdf", width=7, height=4)
 ```
 
 ## 2 Summary statistics of the dataset 
 ```{r, results='hide'} 
 stargazer(dfDiD, type = "text")
-stargazer(dfDiD[, c("children", "finc", "earn", "age", "work", "unearn")], type = "text")
+stargazer(dfDiD[, c("children", "finc", "earn", "age", "work", "unearn")])
+
+# Generate frequency table dPeriod & cChildren 
+dPeriod_freq <- as.data.frame(table(dfDiD$dPeriod))
+stargazer(dPeriod_freq, summary=FALSE)
+cChildren_freq <- as.data.frame(table(dfDiD$cChildren))
+stargazer(cChildren_freq, summary=FALSE)
 ```
 
 ## 3 Difference-in-Difference 
@@ -100,10 +106,8 @@ stargazer(dfDiD[, c("children", "finc", "earn", "age", "work", "unearn")], type 
 # creating averages per group per period 
 avgEarn <- ddply (dfDiD.sub, .(dPeriod, cChildren), summarise, 
                  avgEarn = mean(earn, na.rm=TRUE)) 
-
 avgFinc <- ddply (dfDiD.sub, .(dPeriod, cChildren), summarise, 
                  avgFinc = mean(finc, na.rm=TRUE))
-
 avgWork <- ddply (dfDiD, .(dPeriod, cChildren), summarise, 
                  avgWork = mean(work, na.rm=TRUE))
 
@@ -141,10 +145,8 @@ stargazer(avgtable.Work, summary=FALSE, align = TRUE, type="text",
 ```{r, results='hide'}
 mdlEarn <- earn ~ cChildren + dPeriod + cChildren:dPeriod
 rsltOLSEarn <- lm(mdlEarn, data=dfDiD.sub)
-
 mdlFinc <- finc ~ cChildren + dPeriod + cChildren:dPeriod
 rsltOLSFinc <- lm(mdlFinc, data=dfDiD.sub)
-
 mdlWork <- work ~ cChildren + dPeriod + cChildren:dPeriod
 rsltOLSWork <- lm(mdlWork, data=dfDiD)
 
@@ -179,7 +181,7 @@ stargazer(rsltOLS.control.earn, rsltOLS.control.finc,
 ```
 
 ## Robust standard errors 
-```{r, results='hide'}
+```{r, results='hide', fig.show='hide'}
 #Test for heteroskedasticity 
 rsltOLS.control.earn2 <- lm(mdl.control.earn, data=dfDiD.sub)
 rsltOLS.control.finc2 <- lm(mdl.control.finc, data=dfDiD.sub)
@@ -194,7 +196,6 @@ ggplot(data = data.frame(fit = fitted(rsltOLS.control.earn2),
   theme_bw() +
   labs(x = "Results OLS Fitted") +
   labs(y = "Residuals")
-
 lmtest::bptest(rsltOLS.control.earn2) 
 # p < 0.01, heteroskedastiscity is detected.
 
@@ -207,7 +208,6 @@ ggplot(data = data.frame(fit = fitted(rsltOLS.control.finc2),
   theme_bw() +
   labs(x = "Results OLS Fitted") +
   labs(y = "Residuals")
-
 lmtest::bptest(rsltOLS.control.finc2) 
 # p < 0.01, heteroskedastiscity is detected.
 
@@ -220,7 +220,6 @@ ggplot(data = data.frame(fit = fitted(rsltOLS.control.work2),
   theme_bw() +
   labs(x = "Results OLS Fitted") +
   labs(y = "Residuals")
-
 lmtest::bptest(rsltOLS.control.work2) 
 # p < 0.01, heteroskedastiscity is detected
 ```
