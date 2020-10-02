@@ -29,6 +29,7 @@ library(stargazer)
 library(wbstats)
 library(ggplot2)
 library(plyr)
+library(dplyr)
 
 # Define paths 
 dir <- "C:/Users/eline/Documents/BAM/blok1/ASP/BAM_ASP_A2/"
@@ -46,6 +47,10 @@ dfExport <- wb_data(indicator=c("IC.EXP.TMBC",       # Time to export
                                 country = "countries_only", 
                                 start_date = 2014, 
                                 end_date = 2019)
+
+
+total_countries <- length(unique(dfExport$country))
+total_countries
 
 # Load and save file with variables of interest
 save(dfExport, file=paste0(dirData, "SelectedWorldData.sav"))
