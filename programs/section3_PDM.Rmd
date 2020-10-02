@@ -87,43 +87,47 @@ stargazer(dfExport.sub.cmplt)
 
 ```{r}
 # Plot Cost Export
-plot_CostExport <- ggplot(dfExport.sub.cmplt, aes(x=CostExport, y=TimeExport, color=Country)) +
-  geom_point() + geom_smooth()
+###Illustrate within and between variation for a subset of the data
 
-plot_CostExport
+#Select observation with non missing TimeExport and CostExport
+dfExport.sub.cmplt<- subset(dfExport.sub, !is.na(TimeExport)& !is.na(CostExport),
+                     select= c(Country, Year, TimeExport, CostExport))
+#Determine country averages of TimeExport and CostExport to the data frame
+dfExport.sub.cmplt.avg<- ddply(dfExport.sub.cmplt, .(Country), summarise,
+                    avgTimeExport = mean(TimeExport, na.rm = TRUE),
+                    avgCostExport = mean(CostExport, na.rm = TRUE),
+                    runValid = length(Country))
 
-subCountries <- c("Australia", "Bolivia", "Brazil", "Portugal", "Thailand", 
-                  "Zimbabwe", "Bangladesh", "Bulgaria", "China", "Denmark", 
-                  "France", "Finland", "India")
+#Merge 
+dfExport.sub.cmplt <- merge(dfExport.sub.cmplt, dfExport.sub.cmplt.avg, by= "Country")
 
-dfExport.sub.cmplt <- 
-  dfExport.sub.cmplt[dfExport.sub.cmplt$Country %in% subCountries,]
+#Calculate deamed value of the dependent
+attach(dfExport.sub.cmplt)
+dfExport.sub.cmplt$diff.TimeExport <- TimeExport - avgTimeExport
+dfExport.sub.cmplt$diff.CostExport <- CostExport - avgCostExport
+detach(dfExport.sub.cmplt)
 
+#Select countries
+subCountries <- c("Australia", "Bolivia", "Brazil","Portugal", "Thailand", "Bulgaria", "China", "Finland", "India")
+dfExport.sub.cmplt <- dfExport.sub.cmplt[dfExport.sub.cmplt$Country %in% subCountries,]
+dfExport.sub.cmplt.avg <- dfExport.sub.cmplt.avg[dfExport.sub.cmplt.avg$Country %in% subCountries,]
+
+#Total variation: the straight line is the best fitting line
+#through the scatter, which is obtained with pooled estimation
+#of the relation between life expectancy and GDP
 ggplot(dfExport.sub.cmplt, aes(x=CostExport, y=TimeExport))+
   #add the annual outcomes coloured by Country
-  geom_point(aes(color=Country), size=1)+
+  geom_point(aes(color=Country), size=2)+
   #add regression lines for the countries
-  geom_smooth(method="lm", se=FALSE, colour="dark grey")+
+  geom_smooth(method="lm", se=FALSE, colour="gray")+
   #label the axis
-  xlim(0, 300) + ylim(0, 70)+
+  xlim(0, 300) + ylim(0, 110)+
   xlab("Cost of Export")+ 
   ylab("Time of Export")+
   theme(axis.title= element_text(size=rel(1)),
         axis.text= element_text(size=rel(1)))+
-  guides(colour = guide_legend(override.aes = list(size=1)))
-View(CostExport_graph)
-ggsave(
-  CostExport,
-  plot = last_plot(),
-  device = "png",
-  path = dirRslt,
-  scale = 1,
-  width = NA,
-  height = NA,
-  units = c("in", "cm", "mm"),
-  dpi = 300,
-  limitsize = TRUE,
-)
+  guides(colour = guide_legend(override.aes = list(size=1.5)))
+
 ```
 
 ## 2
@@ -140,12 +144,9 @@ dfExport.sub.cmplt.avg <-
         avg.MerchandiseGDP   = mean(MerchandiseGDP, na.rm=TRUE),
         numValid         = length(Country))
 
-# Merge averages in dfWorld.avg with dfWorld.sub (this can be done with 
-# 'mutate', but then the concise data frame with country average will not be 
-# made available
+#Merge averages in dfExport.sub.cmplt.avg with dfExport.sub.cmplt (this can be done with 
 dfExport.sub.cmplt <- merge(dfExport.sub.cmplt, dfExport.sub.cmplt.avg, 
                             by="Country")
-
 attach(dfExport.sub.cmplt)
 dfExport.sub.cmplt$diff.TimeExport   <- TimeExport   - avg.TimeExport
 dfExport.sub.cmplt$diff.GDPPerCap    <- GDPPerCap    - avg.GDPPerCap
@@ -158,7 +159,7 @@ detach(dfExport.sub.cmplt)
 ```
 Pooled Regression
 ```{r}
-#Formulate the model (very ad hoc)
+#Formulate the model 
 mdlA <- TimeExport ~ GDPPerCap + CostExport + ExportGoodsServices + 
   MerchandiseGDP
 
@@ -227,19 +228,13 @@ stargazer::stargazer(rsltPool, rsltFE.Country, rsltRE.Country,
                      type="text")
 
 ```
-
-
 ## 3 Tests
-
 ```{r}
 # Evaluate the fixed effects model versus the pooled regression model
 # Last minute of tutorial #4 Panel Data
 # An insignificant tests tells that all models are consistent
 # A significant tests rejects the hypothesis in favor of the fix effects model 
 pFtest(rsltFE.Country, rsltPool)
-pooltest(rslt.Pooling, rsltFE.Country)
-
-# How do we now when to use fixed and when to use random?
 # Hausman test: compare random and fixed effects models
 # Under H0, no correlation between disturbance and explanatory variables, 
 # both RE and FE are consistent (though FE is not efficient), under H1, 
@@ -248,21 +243,4 @@ pooltest(rslt.Pooling, rsltFE.Country)
 phtest(rsltFE.Country, rsltRE.Country)
 
 ```
-
-
-## 4
-
-```{r}
-
-
-```
-
-
-## 5 
-
-```{r}
-
-
-```
-
 

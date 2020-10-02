@@ -107,16 +107,6 @@ summary(rsltIV, diagnostics = TRUE)
 <<<<<<< HEAD
 According to the boxplot, we can hardly see there is a strong correlation between the instrumental variable(qob) and the causal variable(educ). Therefore, we need to run a weak instruments test, which gets us a p-value < 2e-16. In terms of this p-value, we can reject the Null hypothesis, which indicates there should be a strong correlation between qob and educ.
 
-```{r}
-# Set directory
-dir <- "C:/Users/ppria/Documents/BAM_ASP_A2/data/"
-
-# Load csv and generate subset containing only variables for interest
-da.IV <- read.csv(file=paste0(dir, "IV_dataset.csv"), header=TRUE)
-da.IV <- subset(da.IV,select = c("age", "educ", "lnwage", "married", "qob", 
-                                 "SMSA", "yob"))
-
-```
 ##4
 IV regression analysis of the effect of education (in years) on log wages using quarter of birth as instrument variable: The quarter of birth partially influences the years of education. We use the variation that qob has on education to estimate the effect of education on weekly earnings. 
 Tables presented below show that an extra year of education for people in the United States born between 1930-1939, leads to a 0.103% increase in weekly earnings. With a p-vale < 0.05, the estimated coefficient is statistically significant. 
@@ -176,10 +166,6 @@ model is defined with both *qob* and *age* as instrumental variables. The result
 of this model are shown in table X model X. For this model the Sagan-Hansen is 
 performed, the test results where significant with p = 4.31e-05. Indicating that
 the assumption that instruments are uncorrelated with the error term is violated.
-
-
-*** We can perform a test on a model that is over-identified but not sure if we
-need to do that. >> Discuss on Tuesday.
 
 ```{r}
 # Set dir >> Eline
