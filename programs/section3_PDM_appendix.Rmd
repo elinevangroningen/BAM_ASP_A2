@@ -14,7 +14,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE,
 ```
 
 # Panel Data Modeling: time to export 
-```{r}
+```{r results='hide'}
 # Load libraries
 library(tidyverse)
 library(stargazer)
@@ -77,7 +77,7 @@ stargazer(dfExport.sub.cmplt)
 
 ## 1 
 
-```{r}
+```{r results='hide'}
 # Plot Cost Export
 ###Illustrate within and between variation for a subset of the data
 
@@ -124,7 +124,7 @@ ggplot(dfExport.sub.cmplt, aes(x=CostExport, y=TimeExport))+
 
 ## 2
 Preparing data for regression
-```{r}
+```{r results='hide'}
 # Determine country averages of the included variables, as well as the number of 
 # non missing observations during the selected observation period
 dfExport.sub.cmplt.avg <- 
@@ -150,7 +150,7 @@ dfExport.sub.cmplt$diff.MerchandiseGDP   <- MerchandiseGDP   -
 detach(dfExport.sub.cmplt)
 ```
 Pooled Regression
-```{r}
+```{r results='hide'}
 #Formulate the model 
 mdlA <- TimeExport ~ GDPPerCap + CostExport + ExportGoodsServices + 
   MerchandiseGDP
@@ -186,7 +186,7 @@ stargazer::stargazer(rsltPool, align=TRUE, no.space=TRUE,
 
 ```
 Between regression
-```{r}
+```{r results='hide'}
 rsltwithin <- lm(mdlA, data= dfExport.within)
 summary(rsltwithin)
 rsltBetween <- lm (mdlA, data= dfExport.between)
@@ -196,7 +196,7 @@ stargazer::stargazer(rsltPool, rsltBetween, aling=TRUE, no.space=TRUE,
                      intercept.bottom= FALSE, type= "text")
 ```
 Fixed Effect Regression
-```{r}
+```{r results='hide'}
 rsltFE.Country <- plm(mdlA, data= dfExport.sub.cmplt, 
                       index= c("Country", "Year"), model="within")
 #Tabulate the results 
@@ -208,7 +208,7 @@ summary(fixef(rsltFE.Country, type="dmean"))
 
 ```
 Random Effect Regression
-```{r}
+```{r results='hide'}
 #Estimate random effect model ('random')
 rsltRE.Country <- plm(mdlA, data=dfExport.sub.cmplt, 
                       index=c("Country", "Year"), model= "random")
@@ -221,7 +221,7 @@ stargazer::stargazer(rsltPool, rsltFE.Country, rsltRE.Country,
 
 ```
 ## 3 Tests
-```{r}
+```{r results='hide'}
 # Evaluate the fixed effects model versus the pooled regression model
 # Last minute of tutorial #4 Panel Data
 # An insignificant tests tells that all models are consistent
