@@ -4,6 +4,9 @@ author: "Eline van Groningen, Paola Priante, Valery Maasdamme, Yuhu Wang"
 date: "9/25/2020"
 output: pdf_document
 ---
+```{r results='hide'}
+
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
@@ -11,25 +14,13 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE,
 ```
 
 # Panel Data Modeling: time to export 
-
-Downloading the libraries 
-
-Definition dependent variable:
-Border compliance captures the time and cost associated with compliance with the 
-economy’s customs regulations and with regulations relating to other inspections 
-that are mandatory in order for the shipment to cross the economy’s border, as 
-well as the time and cost for handling that takes place at its port or border. 
-The time and cost for this segment include time and cost for customs clearance 
-and inspection procedures conducted by other government agencies.
-(Source: https://data.worldbank.org/indicator/IC.EXP.TMBC?end=2019&start=2014)
-```{r}
+```{r results='hide'}
 # Load libraries
 library(tidyverse)
 library(stargazer)
 library(wbstats)
 library(ggplot2)
 library(plyr)
-library(dplyr)
 
 # Define paths 
 dir <- "C:/Users/eline/Documents/BAM/blok1/ASP/BAM_ASP_A2/"
@@ -42,15 +33,12 @@ dirRslt <- paste0(dir, "results/")
 dfExport <- wb_data(indicator=c("IC.EXP.TMBC",       # Time to export
                                 "NY.GDP.PCAP.CD",    # GDP per capita
                                 "TG.VAL.TOTL.GD.ZS", # Merchandise trade % GDP
-                                "NE.EXP.GNFS.ZS",    # Exports of goods and services (% of GDP)
+                                "NE.EXP.GNFS.ZS",    # Exports of goods and services
+                                                     #(% of GDP)
                                 "IC.EXP.CSDC.CD"),   # Cost to export 
                                 country = "countries_only", 
                                 start_date = 2014, 
                                 end_date = 2019)
-
-
-total_countries <- length(unique(dfExport$country))
-total_countries
 
 # Load and save file with variables of interest
 save(dfExport, file=paste0(dirData, "SelectedWorldData.sav"))
@@ -90,7 +78,7 @@ stargazer(dfExport.sub.cmplt)
 
 ## 1 
 
-```{r}
+```{r results='hide'}
 # Plot Cost Export
 ###Illustrate within and between variation for a subset of the data
 
@@ -113,9 +101,11 @@ dfExport.sub.cmplt$diff.CostExport <- CostExport - avgCostExport
 detach(dfExport.sub.cmplt)
 
 #Select countries
-subCountries <- c("Australia", "Bolivia", "Brazil","Portugal", "Thailand", "Bulgaria", "China", "Finland", "India")
+subCountries <- c("Australia", "Bolivia", "Brazil","Portugal", "Thailand", "Bulgaria", 
+                  "China", "Finland", "India")
 dfExport.sub.cmplt <- dfExport.sub.cmplt[dfExport.sub.cmplt$Country %in% subCountries,]
-dfExport.sub.cmplt.avg <- dfExport.sub.cmplt.avg[dfExport.sub.cmplt.avg$Country %in% subCountries,]
+dfExport.sub.cmplt.avg <- dfExport.sub.cmplt.avg[dfExport.sub.cmplt.avg$Country %in% 
+                                                   subCountries,]
 
 #Total variation: the straight line is the best fitting line
 #through the scatter, which is obtained with pooled estimation
@@ -137,7 +127,7 @@ ggplot(dfExport.sub.cmplt, aes(x=CostExport, y=TimeExport))+
 
 ## 2
 Preparing data for regression
-```{r}
+```{r results='hide'}
 # Determine country averages of the included variables, as well as the number of 
 # non missing observations during the selected observation period
 dfExport.sub.cmplt.avg <- 
@@ -149,7 +139,7 @@ dfExport.sub.cmplt.avg <-
         avg.MerchandiseGDP   = mean(MerchandiseGDP, na.rm=TRUE),
         numValid         = length(Country))
 
-#Merge averages in dfExport.sub.cmplt.avg with dfExport.sub.cmplt (this can be done with 
+#Merge averages in dfExport.sub.cmplt.avg with dfExport.sub.cmplt 
 dfExport.sub.cmplt <- merge(dfExport.sub.cmplt, dfExport.sub.cmplt.avg, 
                             by="Country")
 attach(dfExport.sub.cmplt)
@@ -163,7 +153,7 @@ dfExport.sub.cmplt$diff.MerchandiseGDP   <- MerchandiseGDP   -
 detach(dfExport.sub.cmplt)
 ```
 Pooled Regression
-```{r}
+```{r results='hide'}
 #Formulate the model 
 mdlA <- TimeExport ~ GDPPerCap + CostExport + ExportGoodsServices + 
   MerchandiseGDP
@@ -199,7 +189,7 @@ stargazer::stargazer(rsltPool, align=TRUE, no.space=TRUE,
 
 ```
 Between regression
-```{r}
+```{r results='hide'}
 rsltwithin <- lm(mdlA, data= dfExport.within)
 summary(rsltwithin)
 rsltBetween <- lm (mdlA, data= dfExport.between)
@@ -209,7 +199,7 @@ stargazer::stargazer(rsltPool, rsltBetween, aling=TRUE, no.space=TRUE,
                      intercept.bottom= FALSE, type= "text")
 ```
 Fixed Effect Regression
-```{r}
+```{r results='hide'}
 rsltFE.Country <- plm(mdlA, data= dfExport.sub.cmplt, 
                       index= c("Country", "Year"), model="within")
 #Tabulate the results 
@@ -221,7 +211,7 @@ summary(fixef(rsltFE.Country, type="dmean"))
 
 ```
 Random Effect Regression
-```{r}
+```{r results='hide'}
 #Estimate random effect model ('random')
 rsltRE.Country <- plm(mdlA, data=dfExport.sub.cmplt, 
                       index=c("Country", "Year"), model= "random")
@@ -234,7 +224,7 @@ stargazer::stargazer(rsltPool, rsltFE.Country, rsltRE.Country,
 
 ```
 ## 3 Tests
-```{r}
+```{r results='hide'}
 # Evaluate the fixed effects model versus the pooled regression model
 # Last minute of tutorial #4 Panel Data
 # An insignificant tests tells that all models are consistent
