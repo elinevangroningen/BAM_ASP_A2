@@ -1,0 +1,166 @@
+---
+title: "section2_IVA"
+author: "Eline van Groningen, Paola Priante, Valery Maasdamme, Yuhu Wang"
+date: "9/25/2020"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+                      comment = "", fig.height=2, fig.width=4, fig.align = "center")
+```
+
+# Instrumental Variable Analysis: Effect of Compulsory Schooling on Wages
+
+Downloading the libraries 
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(stargazer)
+library(dagitty)
+library(gridExtra)
+library(tinytex)
+library(stargazer)
+library(AER)
+library(ivpack)
+```
+
+Example of code for plots 
+
+```{r, fig.width=8}
+g1.1 <- ggplot(data = hp, aes(LotArea, SalePrice)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  geom_smooth(color = "red", alpha = 0.2) + 
+  theme_bw() +
+  labs(caption = "Figure 1.1") +
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold"))
+
+g1.2 <- ggplot(data = hp, aes(Age, SalePrice)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  geom_smooth(color = "red", alpha = 0.2) + 
+  theme_bw() +
+  labs(caption = "Figure 1.2") +
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold"))
+
+grid.arrange(g1.1, g1.2, g1.3, nrow = 1)
+```
+Import the data
+```{r results='hide'}
+# Set working director
+setwd("C:/Users/Administrator/Desktop/NewStart/Courses/AdvancedStatisticsandProgramming/assignment2/github/BAM_ASP_A2/data")
+<<<<<<< HEAD
+
+# Load csv and generate subset containing only variables for interest
+da.IV <- read.csv("IV_dataset.csv", header = TRUE)
+da.IV <- subset(da.IV, select = c("age", "educ", "lnwage", "married", "qob", 
+                                  "SMSA", "yob"))
+
+## Subset the data set so that we could focus on the variables above according to the order
+=======
+da.IV <- read.csv("IV_dataset.csv", header = TRUE)
+da.IV <- subset(da.IV,select = c("age","educ","lnwage","married","qob","SMSA","yob"))
+## Subset the dataset so that we could focus on the variables above according to the order
+>>>>>>> e30e1e3083fb6ffed70f64d611a6e5002cac5a10
+```
+
+##2
+Present summary statistics of the data
+
+```{r results='hide'}
+stargazer(da.IV,type = "text")
+summary(as.factor(da.IV$married))
+```
+
+##3
+Test if the quarter of birth(qob) meets the relevance criterion.
+```{r results='hide'}
+# Convert to factor variables
+da.IV$married <- as.factor(da.IV$married)
+da.IV$qob <- as.factor(da.IV$qob)
+da.IV$SMSA <- as.factor(da.IV$SMSA)
+da.IV$yob <- as.factor(da.IV$yob)
+
+# To change those variables which should be factor variables into factor variables
+g1.1 <- ggplot(data = da.IV, aes(qob, educ)) +
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
+  theme_bw() +
+  labs(caption = "Figure 2.1") +
+  geom_boxplot() + 
+  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold")) + 
+  labs(x = "Quarter of Birth", y = "Education(in years)")
+g1.1
+
+rsltIV <- ivreg(lnwage ~ educ|qob,data = da.IV)
+summary(rsltIV, diagnostics = TRUE)
+```
+##4
+```{r results='hide'}
+library(ivreg)
+rslt2SLS.A <- ivreg(lnwage ~ educ | qob, data=da.IV)
+summary(rslt2SLS.A)
+stargazer(rslt2SLS.A, type= "text")
+```
+
+```{r results='hide'}
+rslt2SLS.B <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob, 
+                    data=da.IV)
+summary(rslt2SLS.A)
+stargazer(rslt2SLS.A, rslt2SLS.B)
+```
+
+```{r results='hide'}
+#Robust standard errors
+modelIV <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob , 
+                 data=da.IV)
+summary(modelIV)
+
+#Standard  errors (superfluous  in the  case of  seBasic)
+seBasic  <- sqrt(diag(vcov(modelIV)))
+seWhite  <- sqrt(diag(vcovHC(modelIV , type="HC0")))
+library(vcov)
+library(vcovHC)
+# Make  table  with  stargazer
+stargazer(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite), type= "text")
+summary(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite))
+```
+## 5
+```{r results='hide'}
+# Set dir >> Eline
+dir <- "C:/Users/eline/Documents/BAM/blok1/ASP/BAM_ASP_A2/"
+
+# Load csv and generate subset containing only variables for interest
+da.IV <- read.csv(file=paste0(dir, "data/IV_dataset.csv"), header=TRUE)
+da.IV_sub <- subset(da.IV,select = c("age", "educ", "lnwage", "married", "qob", 
+                                 "SMSA", "yob"))
+
+# Convert to factor variables
+da.IV_sub$married <- as.factor(da.IV_sub$married)
+da.IV_sub$qob <- as.factor(da.IV_sub$qob)
+da.IV_sub$SMSA <- as.factor(da.IV_sub$SMSA)
+da.IV_sub$yob <- as.factor(da.IV_sub$yob)
+
+# Define OLS models
+rsltOLS.A <- lm(lnwage ~ educ, data=da.IV_sub)
+rsltOLS.B <- lm(lnwage ~ educ + married + SMSA, data=da.IV_sub)
+
+# Define IV model 
+rsltSLS.A <- ivreg(lnwage ~ educ | qob, data=da.IV_sub)
+rsltSLS.B <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + qob, 
+                 data=da.IV_sub)
+rsltSLS.C <- ivreg(lnwage ~ educ + married + SMSA | married + SMSA + age + qob, 
+                 data=da.IV_sub)
+
+# Generate table containing both models
+stargazer(rsltOLS.A, rsltOLS.B, rsltSLS.A, rsltSLS.B, rsltSLS.C, type="text")
+
+# Test for violation over-identification
+summary(rsltSLS.A, diagnostics = TRUE)
+summary(rsltSLS.B, diagnostics = TRUE)
+summary(rsltSLS.C, diagnostics = TRUE)
+
+
+```
+
