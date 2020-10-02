@@ -103,10 +103,10 @@ ggsave(file=paste0(dirResults, "earnings_plot.png"), width=7, height=4)
 # Convert categorical variables to vector
 dfDiD$year <- as.factor(dfDiD$year)
 dfDiD$state <- as.factor(dfDiD$state)
-dfDiD$nonwhite <- as.factor(dfDiD$nonwhite)
-dfDiD$dWork <- as.factor(dfDiD$work)
-dfDiD$cChildren = as.factor(dfDiD$cChildren)
-dfDiD$dPeriod <- as.factor(dfDiD$dPeriod)
+# dfDiD$nonwhite <- as.factor(dfDiD$nonwhite)
+# dfDiD$dWork <- as.factor(dfDiD$work)
+# dfDiD$cChildren = as.factor(dfDiD$cChildren)
+# dfDiD$dPeriod <- as.factor(dfDiD$dPeriod)
 
 # Check for converting categorical variables
 str(dfDiD)
