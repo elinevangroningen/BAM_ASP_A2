@@ -1,36 +1,32 @@
 ---
-title: "section1_DiD_nosub"
-author: "E.C. van Groningen"
-date: "10/2/2020"
-output: html_document
+title: "Appendix Difference-in-Difference Analysis: Female Labor Participation"
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
+                      comment = "", fig.height=2, fig.width=4, fig.align = "center")
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
 ## Cleaning data
-```{r}
+```{r, results='hide'}
 # Load libraries
+library(tidyverse)
 library(stargazer)
+library(dagitty)
+library(gridExtra)
+library(tinytex)
 library(ggplot2)
-library(reshape2)
+library(tidyr)
+library(dplyr)
 library(plyr)
-library(AER)
-library(maps)
-# library(multiwayvcov)
+library(reshape2)
+library(sandwich)
 
 # Set directories
-# dir <- "/Users/valeriemaasdamme/Documents/BAM_ASP_A2/" 
-dir <- "C:/Users/eline/Documents/BAM/blok1/ASP/BAM_ASP_A2/"
-dirProg <- paste0(dir, "programs/") 
-dirData <- paste0(dir, "data/")
+dir <- "/Users/valeriemaasdamme/Desktop/BAM_ASP_A2" 
+dirProg <- paste0(dir, "/programs/") 
+dirData <- paste0(dir, "/data/")
 dirResults <- paste0(dir, "results/")
 
 # Load csv file
@@ -41,8 +37,8 @@ dfDiD$dPeriod = ifelse(dfDiD$year >= 1993, 1, 0)
 dfDiD$cChildren = ifelse(dfDiD$children >= 1, 1, 0)
 ```
 
-## 1.1 Visual evidence
-```{r}
+## 1 Visual evidence
+```{r, fig.show='hide', results='hide'}
 ## Variable == earn
 # Compute group average for both women with and without children
 earn.agg = aggregate(dfDiD$earn, list(dfDiD$year, dfDiD$cChildren == 1), 
@@ -58,9 +54,11 @@ earn.agg$Group[7:12] = "Women with children"
 # Make and save plot 
 Earn.plot <- qplot(Year, Earn, data=earn.agg, geom=c("point","line"), 
                    colour = Group, xlab="Year", ylab="Annual earnings") + 
-  geom_vline(xintercept = 1993) + theme_bw() 
+  geom_vline(xintercept = 1993) + 
+  theme_bw(base_size = 15) +
+  theme(axis.title = element_text(size = 19))
 Earn.plot
-ggsave(file=paste0(dirResults, "earnings_plot.png"), width=7, height=4)
+ggsave(file="Earn.pdf", width=7, height=4)
 
 # Variable == finc
 # Compute group average for both women with and without children
@@ -75,9 +73,11 @@ finc.agg$Group[7:12] = "Women with children"
 # Make and save plot 
 Finc.plot <- qplot(Year, Finc, data=finc.agg, geom=c("point", "line"), 
                    colour = Group, xlab="Year", ylab="Annual Family Income") + 
-  geom_vline(xintercept = 1993) + theme_bw() 
+  geom_vline(xintercept = 1993) + 
+  theme_bw(base_size = 15) +
+  theme(axis.title = element_text(size = 19))
 Finc.plot
-ggsave(file=paste0(dirResults, "earnings_plot.png"), width=7, height=4)
+ggsave(file="Finc.pdf", width=7, height=4)
 
 # Variable == work 
 # Compute group average for both women with and without children
@@ -93,13 +93,15 @@ work.agg$Group[7:12] = "Women with children"
 Work.plot <- qplot(Year, Work, data=work.agg, geom=c("point", "line"), 
                    colour = Group, xlab="Year", ylab="Work") + 
   geom_line() +
-  geom_vline(xintercept = 1993) + theme_bw() 
+  geom_vline(xintercept = 1993) + 
+  theme_bw(base_size = 15) +
+  theme(axis.title = element_text(size = 19))
 Work.plot
-ggsave(file=paste0(dirResults, "earnings_plot.png"), width=7, height=4)
+ggsave(file="Work.pdf", width=7, height=4)
 ```
 
-## Code for summary statistics 
-```{r}
+## 2 Summary statistics of the data
+```{r, results='hide'}
 # Convert categorical variables to vector
 dfDiD$year <- as.factor(dfDiD$year)
 dfDiD$state <- as.factor(dfDiD$state)
@@ -128,11 +130,11 @@ stargazer(state_freq, summary=FALSE, title="state")
 stargazer(nonwhite_freq, summary=FALSE, title="nonwhite")
 stargazer(work_freq, summary=FALSE, title="work")
 stargazer(dPeriod_freq, summary=FALSE, title="period")
-stargazer(cChildren_freq, summary=FALSE, title="cChildren") # Not sure 
+stargazer(cChildren_freq, summary=FALSE, title="cChildren") 
 ```
 
-## Difference in difference effect
-```{r}
+## 3 Difference in difference effect
+```{r, results='hide'}
 avgEarn <- ddply(dfDiD, .(dPeriod, cChildren), summarise, 
                  avgEarn = mean(earn, na.rm=TRUE))
 
@@ -170,13 +172,12 @@ stargazer(avgtable.Earn, summary=FALSE, align = TRUE,
           title = "Average Annual Earnings")
 stargazer(avgtable.Finc, summary=FALSE, align = TRUE, 
           title = "Average Indicator Annual Family Income")
-stargazer(avgtable.Work, summary=FALSE, align = TRUE, type="text", 
+stargazer(avgtable.Work, summary=FALSE, align = TRUE,  
           title = "Average Indicator Work Status")
 
-
 ```
-## Regression analysis
-```{r}
+## 4 Regression analysis
+```{r,  results='hide'}
 mdlEarn <- earn ~ cChildren + dPeriod + cChildren:dPeriod
 rsltOLSEarn <- lm(mdlEarn, data=dfDiD)
 
@@ -187,15 +188,12 @@ mdlWork <- work ~ cChildren + dPeriod + cChildren:dPeriod
 rsltOLSWork <- lm(mdlWork, data=dfDiD)
 
 stargazer(rsltOLSEarn, rsltOLSFinc, rsltOLSWork,
-          intercept.bottom = FALSE, align = TRUE, no.space=TRUE, type="text")
-
-stargazer(rsltOLSEarn, rsltOLSFinc, rsltOLSWork,
           intercept.bottom = FALSE, align = TRUE, no.space=TRUE)
 
 ```
 
-## Regression with control variables
-```{r}
+## 4.1 Regression with control variables
+```{r,  results='hide'}
 
 # DiD regression earn with control variables
 mdl.control.earn <- earn ~ cChildren + dPeriod + cChildren:dPeriod + urate + 
@@ -223,8 +221,35 @@ stargazer(rsltOLS.control.earn, rsltOLS.control.finc, rsltOLS.control.work,
 ```
 
 
-## Regression with robust standard errors
-```{r}
+## 4.2 Regression with robust standard errors
+```{r, fig.show='hide',  results='hide'}
+#Plots
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.earn), 
+  rsid = residuals(rsltOLS.control.earn)),
+  aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.finc), 
+  rsid = residuals(rsltOLS.control.finc)),
+  aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
+
+ggplot(data = data.frame(fit = fitted(rsltOLS.control.work), 
+  rsid = residuals(rsltOLS.control.work)),
+  aes(fit, rsid)) +
+  geom_point() + 
+  stat_smooth(se = F) +
+  theme_bw() +
+  labs(x = "Results OLS Fitted") +
+  labs(y = "Residuals")
 
 # BP test for the three models
 lmtest::bptest(rsltOLS.control.earn) 
