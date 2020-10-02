@@ -49,7 +49,8 @@ grid.arrange(g1.1, g1.2, g1.3, nrow = 1)
 Import the data
 ```{r results='hide'}
 # Set working director
-setwd("C:/Users/Administrator/Desktop/NewStart/Courses/AdvancedStatisticsandProgramming/assignment2/github/BAM_ASP_A2/data")
+setwd("C:/Users/Administrator/Desktop/NewStart/Courses/AdvancedStatistics
+      andProgramming/assignment2/github/BAM_ASP_A2/data")
 <<<<<<< HEAD
 
 # Load csv and generate subset containing only variables for interest
@@ -57,11 +58,14 @@ da.IV <- read.csv("IV_dataset.csv", header = TRUE)
 da.IV <- subset(da.IV, select = c("age", "educ", "lnwage", "married", "qob", 
                                   "SMSA", "yob"))
 
-## Subset the data set so that we could focus on the variables above according to the order
+## Subset the data set so that we could focus on the variables above according
+#to the order
 =======
 da.IV <- read.csv("IV_dataset.csv", header = TRUE)
-da.IV <- subset(da.IV,select = c("age","educ","lnwage","married","qob","SMSA","yob"))
-## Subset the dataset so that we could focus on the variables above according to the order
+da.IV <- subset(da.IV,select = 
+                  c("age","educ","lnwage","married","qob","SMSA","yob"))
+## Subset the dataset so that we could focus on the variables above 
+##according to the order
 >>>>>>> e30e1e3083fb6ffed70f64d611a6e5002cac5a10
 ```
 
@@ -123,8 +127,10 @@ seWhite  <- sqrt(diag(vcovHC(modelIV , type="HC0")))
 library(vcov)
 library(vcovHC)
 # Make  table  with  stargazer
-stargazer(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite), type= "text")
-summary(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,se = list(seBasic , seWhite))
+stargazer(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,
+          se = list(seBasic , seWhite), type= "text")
+summary(modelIV , modelIV ,align=TRUE , no.space=TRUE ,intercept.bottom = FALSE ,
+        se = list(seBasic , seWhite))
 ```
 ## 5
 ```{r results='hide'}
