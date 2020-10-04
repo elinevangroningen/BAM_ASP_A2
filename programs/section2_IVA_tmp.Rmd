@@ -110,10 +110,12 @@ g1.1 <- ggplot(data = da.IV, aes(qob, educ, fill=qob)) +
   geom_smooth(method = "lm", color = "blue", alpha = 0.2)  + 
   theme_bw() +
   geom_boxplot() + scale_fill_brewer(palette="Dark2") +
-  theme(plot.caption =  element_text(hjust = 0.5, size = 12, face = "bold")) + 
+  theme(plot.caption =  element_text(hjust = 0.5, size = 20, face = "bold"),
+        legend.text=element_text(size=16), legend.title=element_text(size=16), axis.title=element_text(size=20),
+        axis.text=element_text(size=14)) + 
   labs(x = "Quarter of Birth", y = "Education(in years)")
 g1.1 
-ggsave(plot = g1.1, height = 5, width = 6, 
+ggsave(plot = g1.1, height = 6, width = 6,
        filename = paste0(dir, "results/section2-2_boxplot.png"))
 
 rsltIV <- ivreg(lnwage ~ educ|qob,data = da.IV)
